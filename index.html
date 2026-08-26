@@ -151,33 +151,81 @@
 </div>
 
 <script type="module">
-  // ============================================================
-  // SUPABASE SETUP — replace these two values with your own.
-  // Get them from your Supabase project: Settings → API
-  // ============================================================
-  const SUPABASE_URL = "sb_publishable_Zh5qtAqvsSCAv7h2ZnymvQ_5f5aUbhM";
-  const SUPABASE_ANON_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
-
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  // 1. Supabase Credentials
+  const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.supabase = supabase;
 
-  // ---- reflect current session in the nav ----
-  async function refreshNav(){
-    const { data:{ session } } = await supabase.auth.getSession();
+  // 2. Navigation bar updater
+  async function refreshNav() {
+    const { data: { session } } = await supabase.auth.getSession();
     const navRight = document.getElementById('navRight');
-    if (session){
+    if (session) {
       navRight.innerHTML = `<span class="nav-user">Signed in as <b>${session.user.email}</b></span>
         <button class="nav-btn" onclick="window.doSignOut()">Sign out</button>`;
     } else {
-      navRight.innerHTML = `<button class="nav-btn" onclick="openModal('signin')">Sign in</button>
-        <button class="nav-btn primary" onclick="openModal('signup')">Start free</button>`;
+      navRight.innerHTML = `<button class="nav-btn" onclick="window.openModal('signin')">Sign in</button>
+        <button class="nav-btn primary" onclick="window.openModal('signup')">Start free</button>`;
     }
   }
   refreshNav();
   supabase.auth.onAuthStateChange(() => refreshNav());
 
   window.doSignOut = async () => { await supabase.auth.signOut(); };
+
+  // 3. Attach auth functions globally to window so HTML buttons can trigger them
+  let mode = 'signup';
+
+  window.openModal = function(m) { 
+    mode = m; 
+    window.switchTab(m); 
+    document.getElementById('modalBackdrop').classList.add('open'); 
+  };
+
+  window.closeModal = function() { 
+    document.getElementById('modalBackdrop').classList.remove('open'); 
+    document.getElementById('authStatus').textContent = ''; 
+  };
+
+  window.switchTab = function(m) {
+    mode = m;
+    document.getElementById('tabSignin').classList.toggle('active', m === 'signin');
+    document.getElementById('tabSignup').classList.toggle('active', m === 'signup');
+    document.getElementById('authSubmit').textContent = m === 'signin' ? 'Sign in' : 'Create account';
+  };
+
+  window.handleAuth = async function() {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const status = document.getElementById('authStatus');
+    if (!email || !password) { status.textContent = 'Enter an email and password.'; return; }
+    status.textContent = 'Working on it…';
+
+    const { error } = mode === 'signin'
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password });
+
+    if (error) { status.textContent = error.message; return; }
+    status.textContent = mode === 'signup' ? 'Check your email to confirm your account.' : 'Signed in.';
+    if (mode === 'signin') setTimeout(window.closeModal, 700);
+  };
+
+  // 4. Newsletter submission handler
+  document.getElementById('nlForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('nlEmail').value.trim();
+    const status = document.getElementById('nlStatus');
+    status.textContent = 'Subscribing…';
+    const { error } = await supabase.from('subscribers').insert({ email });
+    if (error) { status.textContent = 'Something went wrong — try again.'; return; }
+    status.textContent = "You're in. First debrief lands Monday.";
+    document.getElementById('nlEmail').value = '';
+  });
+</script>
 
   // ---- auth modal logic ----
   let mode = 'signup';
