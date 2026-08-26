@@ -229,6 +229,7 @@
 </script>
 
   // ---- auth modal logic ----
+   <script type="module">
   let mode = 'signup';
   window.openModal = (m) => { mode = m; switchTab(m); document.getElementById('modalBackdrop').classList.add('open'); };
   window.closeModal = () => { document.getElementById('modalBackdrop').classList.remove('open'); document.getElementById('authStatus').textContent=''; };
