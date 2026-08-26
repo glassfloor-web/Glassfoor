@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glassfloor — Repository</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0B0B0B; --panel:#131316; --rule:#232327; --text:#F5F5F3; --muted:#7A7A7E; --cyan:#6FD8CB; --amber:#E8A33D; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh;}
+  header{display:flex; justify-content:space-between; align-items:center; padding:24px 36px; border-bottom:1px solid var(--rule);}
+  .logo{font-weight:800; font-size:16px; letter-spacing:-0.02em;}
+  a.back{color:var(--muted); font-size:13px;}
+  main{max-width:760px; margin:0 auto; padding:48px 32px 100px;}
+  h1{font-weight:800; font-size:34px; letter-spacing:-0.02em; margin-bottom:8px;}
+  .sub{color:var(--muted); font-size:14px; margin-bottom:40px;}
+  .item{background:var(--panel); border:1px solid var(--rule); border-radius:10px; padding:22px 24px; margin-bottom:16px;}
+  .item-meta{display:flex; gap:10px; align-items:center; margin-bottom:10px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted);}
+  .tier-pill{font-size:10px; text-transform:uppercase; letter-spacing:0.06em; padding:3px 9px; border-radius:100px; border:1px solid var(--amber); color:var(--amber);}
+  .item-title{font-weight:700; font-size:17px; margin-bottom:8px;}
+  .item-summary{font-size:14px; color:#C8C8C6; line-height:1.6; margin-bottom:12px;}
+  .item-analysis{font-size:13px; color:var(--cyan); background:#0F1614; border-left:2px solid var(--cyan); padding:10px 14px; border-radius:0 6px 6px 0;}
+  .item-locked{filter:blur(4px); pointer-events:none; user-select:none;}
+  .lock-note{font-size:12px; color:var(--amber); margin-top:10px;}
+  .empty{color:var(--muted); font-size:14px; text-align:center; padding:60px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">glassfloor</div>
+  <a class="back" href="index.html">← back</a>
+</header>
+
+<main>
+  <h1>The repository</h1>
+  <div class="sub">Licensed news + public SEC filings, summarized and tagged in real time.</div>
+  <div id="feed"><div class="empty">Loading…</div></div>
+</main>
+
+<script type="module">
+  const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // In a real app, fetch this from the signed-in user's profile/subscription.
+  // Left as "free" here so you can see the tier-lock behavior working.
+  const userTier = 'free';
+  const tierRank = { free: 0, pro: 1, institutional: 2 };
+
+  async function load() {
+    const { data, error } = await supabase
+      .from('repo_items')
+      .select('*')
+      .eq('published', true)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    const feed = document.getElementById('feed');
+    if (error) { feed.innerHTML = `<div class="empty">Couldn't load the feed.</div>`; return; }
+    if (!data || data.length === 0) { feed.innerHTML = `<div class="empty">Nothing here yet — the pipeline hasn't run.</div>`; return; }
+
+    feed.innerHTML = data.map(item => {
+      const locked = tierRank[item.tier] > tierRank[userTier];
+      return `
+        <div class="item">
+          <div class="item-meta">
+            <span>${item.source_name}</span>
+            <span>·</span>
+            <span>${new Date(item.created_at).toLocaleString()}</span>
+            ${item.tier !== 'free' ? `<span class="tier-pill">${item.tier}</span>` : ''}
+          </div>
+          <div class="${locked ? 'item-locked' : ''}">
+            <div class="item-title">${item.title}</div>
+            <div class="item-summary">${item.summary}</div>
+            ${item.ai_analysis ? `<div class="item-analysis">${item.ai_analysis}</div>` : ''}
+          </div>
+          ${locked ? `<div class="lock-note">Upgrade to ${item.tier} to unlock this analysis.</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  load();
+</script>
+
+</body>
+</html>
