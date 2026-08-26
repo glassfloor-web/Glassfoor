@@ -111,16 +111,13 @@
   <div class="wrap">
     <div class="phase-eyebrow"><span class="phase-num">03</span><span class="phase-tier">Pro</span></div>
     <h2 class="kinetic">Guess the<br>crash. Blind.</h2>
-   <script type="module">
-    // ============================================================
-  // SUPABASE SETUP
-  // ============================================================
-  const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
+    <p>Drop into a real crash with no date or ticker shown. Trade it. See what your read was worth.</p>
+  </div>
+</section>
 
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  window.supabase = supabase;
+<section class="newsletter" data-idx="4">
+  <div class="wrap">
+    <div class="newsletter-tag">the weekly debrief</div>
     <h2>One email a week. Same translation layer.</h2>
     <p>What moved, why it moved, and a chart to go with it — written in plain English, sent every Monday.</p>
     <form class="nl-form" id="nlForm">
@@ -133,7 +130,7 @@
 </section>
 
 <footer>glassfloor</footer>
-</script>
+
 <!-- ================= AUTH MODAL ================= -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal-wrap">
@@ -228,53 +225,8 @@
   });
 </script>
 
-  // ---- auth modal logic ----
-   <script type="module">
-  let mode = 'signup';
-  window.openModal = (m) => { mode = m; switchTab(m); document.getElementById('modalBackdrop').classList.add('open'); };
-  window.closeModal = () => { document.getElementById('modalBackdrop').classList.remove('open'); document.getElementById('authStatus').textContent=''; };
-  window.switchTab = (m) => {
-    mode = m;
-    document.getElementById('tabSignin').classList.toggle('active', m === 'signin');
-    document.getElementById('tabSignup').classList.toggle('active', m === 'signup');
-    document.getElementById('authSubmit').textContent = m === 'signin' ? 'Sign in' : 'Create account';
-  };
-
-  window.handleAuth = async () => {
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-    const status = document.getElementById('authStatus');
-    if (!email || !password){ status.textContent = 'Enter an email and password.'; return; }
-    status.textContent = 'Working on it…';
-
-    const { error } = mode === 'signin'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
-
-    if (error){ status.textContent = error.message; return; }
-    status.textContent = mode === 'signup' ? 'Check your email to confirm your account.' : 'Signed in.';
-    if (mode === 'signin') setTimeout(closeModal, 700);
-  };
-
-  // ---- newsletter form ----
-  // Simplest path: point this form at your email provider's own signup
-  // endpoint (Beehiiv / ConvertKit / Mailchimp all give you one) instead
-  // of building your own sender. This example also logs it to a
-  // Supabase table called "subscribers" so you keep your own copy.
-  document.getElementById('nlForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('nlEmail').value.trim();
-    const status = document.getElementById('nlStatus');
-    status.textContent = 'Subscribing…';
-    const { error } = await supabase.from('subscribers').insert({ email });
-    if (error){ status.textContent = 'Something went wrong — try again.'; return; }
-    status.textContent = "You're in. First debrief lands Monday.";
-    document.getElementById('nlEmail').value = '';
-  });
-</script>
-
 <script>
-  // ---- scroll reveal + kinetic type (same as previous samples) ----
+  // ---- scroll reveal + kinetic type ----
   const phases = document.querySelectorAll('.phase, .newsletter');
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
