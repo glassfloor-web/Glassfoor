@@ -111,13 +111,15 @@
   <div class="wrap">
     <div class="phase-eyebrow"><span class="phase-num">03</span><span class="phase-tier">Pro</span></div>
     <h2 class="kinetic">Guess the<br>crash. Blind.</h2>
-    <p>Drop into a real crash with no date or ticker shown. Trade it. See what your read was worth.</p>
-  </div>
-</section>
+    // ============================================================
+  // SUPABASE SETUP
+  // ============================================================
+  const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
 
-<section class="newsletter" data-idx="4">
-  <div class="wrap">
-    <div class="newsletter-tag">the weekly debrief</div>
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.supabase = supabase;
     <h2>One email a week. Same translation layer.</h2>
     <p>What moved, why it moved, and a chart to go with it — written in plain English, sent every Monday.</p>
     <form class="nl-form" id="nlForm">
