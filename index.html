@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glassfloor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; overflow-x: hidden; background: #0B0B0B; }
+    
+    .wrap { 
+      max-width: 900px; 
+      margin: 0 auto; 
+      padding: 0 40px; 
+      text-align: center; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+    }
+
+    nav { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 24px 40px; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      z-index: 30; 
+      background: rgba(11, 11, 11, 0.7); 
+      backdrop-filter: blur(10px); 
+      border-bottom: 1px solid #1C1C1C; 
+    }
+    .logo { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: #fff; }
+    .nav-right { display: flex; gap: 12px; align-items: center; }
+    .nav-btn { font-size: 13px; padding: 9px 18px; border-radius: 100px; font-weight: 600; border: 1px solid #333; color: #fff; background: transparent; cursor: pointer; }
+    .nav-btn.primary { background: #fff; color: #0B0B0B; border: none; }
+    .nav-user { font-size: 13px; color: #8A8A8A; }
+    .nav-user b { color: #fff; font-weight: 500; }
+
+    section { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 140px 0; }
+    .hero { background: #0B0B0B; color: #fff; }
+    .hero-tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #7A7A7A; margin-bottom: 28px; font-weight: 500; }
+    .hero h1 { font-weight: 800; font-size: 96px; line-height: 0.96; letter-spacing: -0.045em; margin-bottom: 26px; }
+    .hero p { color: #8A8A8A; font-size: 17px; max-width: 440px; font-weight: 300; margin-bottom: 36px; }
+    .hero-cta { display: inline-block; background: #fff; color: #0B0B0B; padding: 15px 32px; border-radius: 100px; font-size: 14px; font-weight: 700; text-decoration: none; }
+
+    .phase { opacity: 0; transition: opacity 0.6s ease; }
+    .phase.visible { opacity: 1; }
+    .phase-dark { background: #0B0B0B; color: #fff; }
+    .phase-light { background: #F7F6F3; color: #0B0B0B; }
+    .phase-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; justify-content: center; }
+    .phase-num { font-size: 13px; opacity: 0.4; font-weight: 500; }
+    .phase-tier { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 100px; border: 1px solid currentColor; opacity: 0.7; font-weight: 500; }
+    .phase h2 { font-weight: 800; font-size: 84px; letter-spacing: -0.045em; line-height: 0.96; margin-bottom: 24px; max-width: 760px; will-change: transform; }
+    .phase p { font-size: 16px; line-height: 1.75; max-width: 460px; opacity: 0.65; font-weight: 300; }
+
+    /* newsletter */
+    .newsletter { background: #0B0B0B; color: #fff; flex-direction: column; }
+    .newsletter-tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #7A7A7A; margin-bottom: 24px; font-weight: 500; }
+    .newsletter h2 { font-weight: 800; font-size: 48px; letter-spacing: -0.03em; margin-bottom: 16px; max-width: 560px; }
+    .newsletter p { color: #8A8A8A; font-size: 15px; max-width: 420px; margin-bottom: 36px; font-weight: 300; }
+    .nl-form { display: flex; gap: 10px; max-width: 420px; width: 100%; }
+    .nl-form input { flex: 1; background: #131316; border: 1px solid #232327; color: #fff; padding: 14px 16px; border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; }
+    .nl-form button { background: #fff; color: #0B0B0B; border: none; padding: 14px 22px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .nl-note { font-size: 12px; color: #5A5A5A; margin-top: 14px; }
+    .nl-status { font-size: 13px; margin-top: 14px; color: #6FD8CB; min-height: 18px; }
+
+    footer { background: #0B0B0B; color: #5A5A5A; text-align: center; padding: 28px; font-size: 12px; border-top: 1px solid #1C1C1C; }
+
+    /* auth modal */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 50; align-items: center; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .modal-wrap { position: relative; }
+    .modal { background: #131316; border: 1px solid #232327; border-radius: 12px; padding: 36px; width: 100%; max-width: 360px; color: #fff; }
+    .modal-tabs { display: flex; gap: 4px; background: #1B1C21; border-radius: 8px; padding: 4px; margin-bottom: 24px; }
+    .modal-tab { flex: 1; text-align: center; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: #8A8A8A; }
+    .modal-tab.active { background: #fff; color: #0B0B0B; }
+    .modal input { width: 100%; background: #0B0B0B; border: 1px solid #232327; color: #fff; padding: 13px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+    .modal button.submit { width: 100%; background: #fff; color: #0B0B0B; border: none; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 14px; margin-top: 6px; cursor: pointer; }
+    .modal-close { position: absolute; top: 20px; right: 20px; color: #8A8A8A; font-size: 20px; cursor: pointer; background: none; border: none; }
+    .modal-status { font-size: 12.5px; color: #E8A33D; margin-top: 12px; min-height: 16px; }
+
+    @media(max-width: 760px) {
+      .hero h1 { font-size: 44px; }
+      .phase h2 { font-size: 38px; }
+      .newsletter h2 { font-size: 32px; }
+      .nl-form { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">glassfloor</div>
+    <div class="nav-right" id="navRight">
+      <a href="repository.html" class="nav-btn" style="text-decoration: none; display: inline-flex; align-items: center;">Repository</a>
+      <button class="nav-btn" onclick="openModal('signin')">Sign in</button>
+      <button class="nav-btn primary" onclick="openModal('signup')">Start free</button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" data-idx="0">
+    <div class="wrap">
+      <div class="hero-tag">practice trading that explains itself</div>
+      <h1 class="kinetic">Markets, made<br>readable.</h1>
+      <p>Real prices, fake money, and a plain-English layer that tells you why the market's actually moving.</p>
+      <a href="#" class="hero-cta" onclick="openModal('signup'); return false;">Start paper trading — free</a>
+    </div>
+  </section>
+
+  <!-- Phase 1 -->
+  <section class="phase phase-dark" data-idx="1">
+    <div class="wrap">
+      <div class="phase-eyebrow">
+        <span class="phase-num">01</span>
+        <span class="phase-tier">Free</span>
+      </div>
+      <h2 class="kinetic">Trade it.<br>Understand it.</h2>
+      <p>Every number on screen gets a plain-English sentence next to it — right where the decision happens.</p>
+    </div>
+  </section>
+
+  <!-- Phase 2 -->
+  <section class="phase phase-light" data-idx="2">
+    <div class="wrap">
+      <div class="phase-eyebrow">
+        <span class="phase-num">02</span>
+        <span class="phase-tier">Free</span>
+      </div>
+      <h2 class="kinetic">It levels<br>up with you.</h2>
+      <p>The app notices when you're ready for more detail — or you flip to it yourself, any time.</p>
+    </div>
+  </section>
+
+  <!-- Phase 3 -->
+  <section class="phase phase-dark" data-idx="3">
+    <div class="wrap">
+      <div class="phase-eyebrow">
+        <span class="phase-num">03</span>
+        <span class="phase-tier">Pro</span>
+      </div>
+      <h2 class="kinetic">Guess the<br>crash. Blind.</h2>
+      <p>Drop into a real crash with no date or ticker shown. Trade it. See what your read was worth.</p>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="newsletter" data-idx="4">
+    <div class="wrap">
+      <div class="newsletter-tag">the weekly debrief</div>
+      <h2>One email a week. Same translation layer.</h2>
+      <p>What moved, why it moved, and a chart to go with it — written in plain English, sent every Monday.</p>
+      <form class="nl-form" id="nlForm">
+        <input type="email" id="nlEmail" placeholder="you@email.com" required>
+        <button type="submit">Subscribe</button>
+      </form>
+      <div class="nl-status" id="nlStatus"></div>
+      <div class="nl-note">Free. Unsubscribe any time.</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>glassfloor</footer>
+
+  <!-- Auth Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal-wrap">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal">
+        <div class="modal-tabs">
+          <div class="modal-tab" id="tabSignin" onclick="switchTab('signin')">Sign in</div>
+          <div class="modal-tab" id="tabSignup" onclick="switchTab('signup')">Sign up</div>
+        </div>
+        <input type="email" id="authEmail" placeholder="Email">
+        <input type="password" id="authPassword" placeholder="Password">
+        <button class="submit" id="authSubmit" onclick="handleAuth()">Continue</button>
+        <div class="modal-status" id="authStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase & Auth Logic -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    // 1. Supabase Credentials
+    const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabase = supabase;
+
+    // 2. Navigation bar updater
+    async function refreshNav() {
+      const { data: { session } } = await supabase.auth.getSession();
+      const navRight = document.getElementById('navRight');
+      if (session) {
+        navRight.innerHTML = `
+          <span class="nav-user">Signed in as <b>${session.user.email}</b></span>
+          <button class="nav-btn" onclick="window.doSignOut()">Sign out</button>
+        `;
+      } else {
+        navRight.innerHTML = `
+          <button class="nav-btn" onclick="window.openModal('signin')">Sign in</button>
+          <button class="nav-btn primary" onclick="window.openModal('signup')">Start free</button>
+        `;
+      }
+    }
+    refreshNav();
+    supabase.auth.onAuthStateChange(() => refreshNav());
+
+    window.doSignOut = async () => { 
+      await supabase.auth.signOut(); 
+    };
+
+    // 3. Attach auth functions globally
+    let mode = 'signup';
+
+    window.openModal = function(m) { 
+      mode = m; 
+      window.switchTab(m); 
+      document.getElementById('modalBackdrop').classList.add('open'); 
+    };
+
+    window.closeModal = function() { 
+      document.getElementById('modalBackdrop').classList.remove('open'); 
+      document.getElementById('authStatus').textContent = ''; 
+    };
+
+    window.switchTab = function(m) {
+      mode = m;
+      document.getElementById('tabSignin').classList.toggle('active', m === 'signin');
+      document.getElementById('tabSignup').classList.toggle('active', m === 'signup');
+      document.getElementById('authSubmit').textContent = m === 'signin' ? 'Sign in' : 'Create account';
+    };
+
+    window.handleAuth = async function() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const status = document.getElementById('authStatus');
+      
+      if (!email || !password) { 
+        status.textContent = 'Enter an email and password.'; 
+        return; 
+      }
+      status.textContent = 'Working on it…';
+
+      const { error } = mode === 'signin'
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
+
+      if (error) { 
+        status.textContent = error.message; 
+        return; 
+      }
+      status.textContent = mode === 'signup' ? 'Check your email to confirm your account.' : 'Signed in.';
+      if (mode === 'signin') setTimeout(window.closeModal, 700);
+    };
+
+    // 4. Newsletter submission handler
+    document.getElementById('nlForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('nlEmail').value.trim();
+      const status = document.getElementById('nlStatus');
+      status.textContent = 'Subscribing…';
+
+      const { error } = await supabase.from('subscribers').insert({ email });
+      if (error) { 
+        status.textContent = 'Something went wrong — try again.'; 
+        return; 
+      }
+      status.textContent = "You're in. First debrief lands Monday.";
+      document.getElementById('nlEmail').value = '';
+    });
+  </script>
+
+  <!-- Animations & Interactions -->
+  <script>
+    const phases = document.querySelectorAll('.phase, .newsletter');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { 
+        if (e.isIntersecting) e.target.classList.add('visible'); 
+      });
+    }, { threshold: 0.25 });
+    phases.forEach(p => io.observe(p));
+
+    const kinetics = document.querySelectorAll('.kinetic');
+    const vh = () => window.innerHeight;
+    
+    function updateKinetic() {
+      kinetics.forEach(el => {
+        const r = el.getBoundingClientRect();
+        const center = r.top + r.height / 2;
+        const dist = (center - vh() / 2) / (vh() / 2);
+        const clamped = Math.max(-1, Math.min(1, dist));
+        const scale = 1 - Math.abs(clamped) * 0.08;
+        const translate = clamped * 30;
+        el.style.transform = `translateY(${translate.toFixed(1)}px) scale(${scale.toFixed(3)})`;
+      });
+    }
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) { 
+        requestAnimationFrame(() => { 
+          updateKinetic(); 
+          ticking = false; 
+        }); 
+        ticking = true; 
+      }
+    });
+    updateKinetic();
+  </script>
+
+</body>
+</html>
