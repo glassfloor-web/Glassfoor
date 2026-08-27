@@ -2,24 +2,23 @@ name: Automated Market News Pipeline
 
 on:
   schedule:
-    # Runs automatically every 2 hours
     - cron: '0 */2 * * *'
-  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions UI
+  workflow_dispatch:
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install Dependencies
-        run: npm install @supabase/supabase-js
+        run: npm install @supabase/supabase-js node-fetch
 
       - name: Execute Pipeline Script
         env:
