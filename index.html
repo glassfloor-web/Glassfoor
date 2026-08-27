@@ -214,22 +214,26 @@
         `;
       }
     }
-    refreshNav();
-    supabase.auth.onAuthStateChange(() => refreshNav());
+    // 4. Newsletter submission handler
+    document.getElementById('nlForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('nlEmail').value.trim();
+      const status = document.getElementById('nlStatus');
+      status.textContent = 'Subscribing…';
 
-    window.doSignOut = async () => { 
-      await supabase.auth.signOut(); 
-    };
+      // Enclose payload in an array: [{ email }]
+      const { data, error } = await supabase
+        .from('subscribers')
+        .insert([{ email: email }]);
 
-    // 3. Attach auth functions globally
-    let mode = 'signup';
-
-    window.openModal = function(m) { 
-      mode = m; 
-      window.switchTab(m); 
-      document.getElementById('modalBackdrop').classList.add('open'); 
-    };
-
+      if (error) { 
+        console.error("Supabase Error:", error);
+        status.textContent = 'Something went wrong — try again.'; 
+        return; 
+      }
+      status.textContent = "You're in. First debrief lands Monday.";
+      document.getElementById('nlEmail').value = '';
+    });
     window.closeModal = function() { 
       document.getElementById('modalBackdrop').classList.remove('open'); 
       document.getElementById('authStatus').textContent = ''; 
