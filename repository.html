@@ -1,90 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Glassfloor — Repository</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{ --bg:#0B0B0B; --panel:#131316; --rule:#232327; --text:#F5F5F3; --muted:#7A7A7E; --cyan:#6FD8CB; --amber:#E8A33D; }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh;}
-  header{display:flex; justify-content:space-between; align-items:center; padding:24px 36px; border-bottom:1px solid var(--rule);}
-  .logo{font-weight:800; font-size:16px; letter-spacing:-0.02em;}
-  a.back{color:var(--muted); font-size:13px;}
-  main{max-width:760px; margin:0 auto; padding:48px 32px 100px;}
-  h1{font-weight:800; font-size:34px; letter-spacing:-0.02em; margin-bottom:8px;}
-  .sub{color:var(--muted); font-size:14px; margin-bottom:40px;}
-  .item{background:var(--panel); border:1px solid var(--rule); border-radius:10px; padding:22px 24px; margin-bottom:16px;}
-  .item-meta{display:flex; gap:10px; align-items:center; margin-bottom:10px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted);}
-  .tier-pill{font-size:10px; text-transform:uppercase; letter-spacing:0.06em; padding:3px 9px; border-radius:100px; border:1px solid var(--amber); color:var(--amber);}
-  .item-title{font-weight:700; font-size:17px; margin-bottom:8px;}
-  .item-summary{font-size:14px; color:#C8C8C6; line-height:1.6; margin-bottom:12px;}
-  .item-analysis{font-size:13px; color:var(--cyan); background:#0F1614; border-left:2px solid var(--cyan); padding:10px 14px; border-radius:0 6px 6px 0;}
-  .item-locked{filter:blur(4px); pointer-events:none; user-select:none;}
-  .lock-note{font-size:12px; color:var(--amber); margin-top:10px;}
-  .empty{color:var(--muted); font-size:14px; text-align:center; padding:60px 0;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glassfloor — Knowledge Repository</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0B0B0B; color: #fff; padding-top: 100px; min-height: 100vh; }
+    
+    nav { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 24px 40px; position: fixed; top: 0; left: 0; right: 0; z-index: 30; 
+      background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #1C1C1C; 
+    }
+    .logo { font-weight: 800; font-size: 16px; color: #fff; text-decoration: none; }
+    .nav-right { display: flex; gap: 12px; align-items: center; }
+    .nav-btn { font-size: 13px; padding: 9px 18px; border-radius: 100px; font-weight: 600; border: 1px solid #333; color: #fff; background: transparent; cursor: pointer; text-decoration: none; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    .header { margin-bottom: 40px; text-align: left; }
+    .header h1 { font-size: 42px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .header p { color: #8A8A8A; font-size: 16px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .card { background: #131316; border: 1px solid #232327; border-radius: 12px; padding: 24px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+    .tier-badge { align-self: flex-start; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 100px; border: 1px solid #333; color: #8A8A8A; margin-bottom: 16px; }
+    .card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+    .card p { font-size: 13.5px; color: #8A8A8A; line-height: 1.6; margin-bottom: 20px; }
+    .read-btn { background: #fff; color: #0B0B0B; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; align-self: flex-start; }
+    
+    .locked { opacity: 0.6; }
+    .locked .read-btn { background: #222; color: #777; cursor: not-allowed; }
+
+    /* Article Reader Drawer */
+    .drawer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: flex-end; }
+    .drawer.open { display: flex; }
+    .drawer-content { background: #131316; width: 100%; max-width: 600px; height: 100%; padding: 40px; overflow-y: auto; border-left: 1px solid #232327; position: relative; }
+    .close-drawer { position: absolute; top: 20px; right: 20px; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+    .drawer h2 { font-size: 28px; font-weight: 800; margin-bottom: 16px; }
+    .drawer-body { color: #CCCCCC; font-size: 15px; line-height: 1.8; margin-top: 24px; white-space: pre-wrap; }
+  </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">glassfloor</div>
-  <a class="back" href="index.html">← back</a>
-</header>
+  <nav>
+    <a href="index.html" class="logo">glassfloor</a>
+    <div class="nav-right" id="navRight">
+      <a href="index.html" class="nav-btn">Home</a>
+    </div>
+  </nav>
 
-<main>
-  <h1>The repository</h1>
-  <div class="sub">Licensed news + public SEC filings, summarized and tagged in real time.</div>
-  <div id="feed"><div class="empty">Loading…</div></div>
-</main>
+  <div class="container">
+    <div class="header">
+      <h1>Repository</h1>
+      <p>Plain-English breakdown archives and market debriefs.</p>
+    </div>
 
-<script type="module">
-  const SUPABASE_URL = "sb_publishable_Zh5qtAqvsSCAv7h2ZnymvQ_5f5aUbhM";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <div class="grid" id="articlesGrid">
+      <p style="color: #666;">Loading repository content...</p>
+    </div>
+  </div>
 
-  // In a real app, fetch this from the signed-in user's profile/subscription.
-  // Left as "free" here so you can see the tier-lock behavior working.
-  const userTier = 'free';
-  const tierRank = { free: 0, pro: 1, institutional: 2 };
+  <!-- Article View Drawer -->
+  <div class="drawer" id="articleDrawer">
+    <div class="drawer-content">
+      <button class="close-drawer" onclick="closeDrawer()">×</button>
+      <div class="tier-badge" id="drawerTier">FREE</div>
+      <h2 id="drawerTitle">Article Title</h2>
+      <div class="drawer-body" id="drawerBody">Body text loads here...</div>
+    </div>
+  </div>
 
-  async function load() {
-    const { data, error } = await supabase
-      .from('repo_items')
-      .select('*')
-      .eq('published', true)
-      .order('created_at', { ascending: false })
-      .limit(30);
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    const feed = document.getElementById('feed');
-    if (error) { feed.innerHTML = `<div class="empty">Couldn't load the feed.</div>`; return; }
-    if (!data || data.length === 0) { feed.innerHTML = `<div class="empty">Nothing here yet — the pipeline hasn't run.</div>`; return; }
+    const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    feed.innerHTML = data.map(item => {
-      const locked = tierRank[item.tier] > tierRank[userTier];
-      return `
-        <div class="item">
-          <div class="item-meta">
-            <span>${item.source_name}</span>
-            <span>·</span>
-            <span>${new Date(item.created_at).toLocaleString()}</span>
-            ${item.tier !== 'free' ? `<span class="tier-pill">${item.tier}</span>` : ''}
+    let currentUserTier = 'free';
+
+    const tierHierarchy = { free: 1, mid: 2, pro: 3 };
+
+    async function initRepository() {
+      // 1. Get user tier
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('tier')
+          .eq('id', session.user.id)
+          .single();
+        if (profile) currentUserTier = profile.tier || 'free';
+      }
+
+      // 2. Load articles
+      const { data: articles, error } = await supabase
+        .from('knowledge_repository')
+        .select('*');
+
+      const grid = document.getElementById('articlesGrid');
+      
+      if (error || !articles || articles.length === 0) {
+        grid.innerHTML = '<p style="color: #8A8A8A;">No articles found in the repository yet. Add rows to `knowledge_repository` in Supabase!</p>';
+        return;
+      }
+
+      grid.innerHTML = articles.map(article => {
+        const articleLevel = tierHierarchy[article.access_tier] || 1;
+        const userLevel = tierHierarchy[currentUserTier] || 1;
+        const isLocked = articleLevel > userLevel;
+
+        return `
+          <div class="card ${isLocked ? 'locked' : ''}">
+            <div>
+              <div class="tier-badge">${article.access_tier.toUpperCase()}</div>
+              <h3>${article.title}</h3>
+              <p>${article.summary || 'No summary available.'}</p>
+            </div>
+            <button class="read-btn" onclick="openArticle('${article.id}', ${isLocked})">
+              ${isLocked ? '🔒 Upgrade to Access' : 'Read Breakdown'}
+            </button>
           </div>
-          <div class="${locked ? 'item-locked' : ''}">
-            <div class="item-title">${item.title}</div>
-            <div class="item-summary">${item.summary}</div>
-            ${item.ai_analysis ? `<div class="item-analysis">${item.ai_analysis}</div>` : ''}
-          </div>
-          ${locked ? `<div class="lock-note">Upgrade to ${item.tier} to unlock this analysis.</div>` : ''}
-        </div>`;
-    }).join('');
-  }
+        `;
+      }).join('');
 
-  load();
-</script>
+      window.articlesCache = articles;
+    }
 
+    window.openArticle = (id, isLocked) => {
+      if (isLocked) {
+        alert(`This article requires a ${currentUserTier === 'free' ? 'Mid or Pro' : 'Pro'} tier plan.`);
+        return;
+      }
+      const article = window.articlesCache.find(a => a.id == id);
+      if (!article) return;
+
+      document.getElementById('drawerTier').textContent = article.access_tier.toUpperCase();
+      document.getElementById('drawerTitle').textContent = article.title;
+      document.getElementById('drawerBody').textContent = article.content || article.summary;
+      document.getElementById('articleDrawer').classList.add('open');
+    };
+
+    window.closeDrawer = () => {
+      document.getElementById('articleDrawer').classList.remove('open');
+    };
+
+    initRepository();
+  </script>
 </body>
 </html>
