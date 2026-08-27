@@ -15,10 +15,10 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install Dependencies
-        run: npm install @supabase/supabase-js node-fetch
+        run: npm install @supabase/supabase-js
 
       - name: Execute Pipeline Script
         env:
