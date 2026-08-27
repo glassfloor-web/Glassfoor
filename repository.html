@@ -115,15 +115,32 @@
         if (profile) currentUserTier = profile.tier || 'free';
       }
 
-      const { data: articles, error } = await supabase.from('knowledge_repository').select('*');
+      // Fetch articles ordered newest-first
+      const { data: articles, error } = await supabase
+        .from('knowledge_repository')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       if (error || !articles || articles.length === 0) {
         document.getElementById('articlesGrid').innerHTML = '<p style="color: #8A8A8A;">No articles found in the repository yet.</p>';
-        return;
+      } else {
+        allArticles = articles;
+        window.articlesCache = articles;
+        renderArticles(allArticles);
       }
 
-      allArticles = articles;
-      window.articlesCache = articles;
-      renderArticles(allArticles);
+      // Supabase Realtime Subscription for live updates
+      supabase
+        .channel('realtime_articles')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'knowledge_repository' }, 
+          (payload) => {
+            allArticles.unshift(payload.new);
+            window.articlesCache = allArticles;
+            filterArticles();
+          }
+        )
+        .subscribe();
     }
 
     function renderArticles(articlesToRender) {
