@@ -36,9 +36,9 @@
       backdrop-filter: blur(10px); 
       border-bottom: 1px solid #1C1C1C; 
     }
-    .logo { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: #fff; }
+    .logo { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: #fff; text-decoration: none; }
     .nav-right { display: flex; gap: 12px; align-items: center; }
-    .nav-btn { font-size: 13px; padding: 9px 18px; border-radius: 100px; font-weight: 600; border: 1px solid #333; color: #fff; background: transparent; cursor: pointer; }
+    .nav-btn { font-size: 13px; padding: 9px 18px; border-radius: 100px; font-weight: 600; border: 1px solid #333; color: #fff; background: transparent; cursor: pointer; text-decoration: none; }
     .nav-btn.primary { background: #fff; color: #0B0B0B; border: none; }
     .nav-user { font-size: 13px; color: #8A8A8A; }
     .nav-user b { color: #fff; font-weight: 500; }
@@ -98,7 +98,7 @@
 
   <!-- Navigation -->
   <nav>
-    <div class="logo">glassfloor</div>
+    <a href="index.html" class="logo">glassfloor</a>
     <div class="nav-right" id="navRight">
       <a href="repository.html" class="nav-btn" style="text-decoration: none; display: inline-flex; align-items: center;">Repository</a>
       <button class="nav-btn" onclick="openModal('signin')">Sign in</button>
@@ -204,11 +204,13 @@
       const navRight = document.getElementById('navRight');
       if (session) {
         navRight.innerHTML = `
+          <a href="repository.html" class="nav-btn" style="text-decoration: none; display: inline-flex; align-items: center;">Repository</a>
           <span class="nav-user">Signed in as <b>${session.user.email}</b></span>
           <button class="nav-btn" onclick="window.doSignOut()">Sign out</button>
         `;
       } else {
         navRight.innerHTML = `
+          <a href="repository.html" class="nav-btn" style="text-decoration: none; display: inline-flex; align-items: center;">Repository</a>
           <button class="nav-btn" onclick="window.openModal('signin')">Sign in</button>
           <button class="nav-btn primary" onclick="window.openModal('signup')">Start free</button>
         `;
@@ -265,7 +267,7 @@
       if (mode === 'signin') setTimeout(window.closeModal, 700);
     };
 
-    // 4. Newsletter submission handler (Updated to pass array payload)
+    // 4. Newsletter submission handler
     document.getElementById('nlForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('nlEmail').value.trim();
