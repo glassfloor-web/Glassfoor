@@ -109,14 +109,14 @@
       }
 
       grid.innerHTML = articles.map(article => {
-        const articleLevel = tierHierarchy[article.access_tier] || 1;
+        const articleLevel = tierHierarchy[article.tier_required] || 1;
         const userLevel = tierHierarchy[currentUserTier] || 1;
         const isLocked = articleLevel > userLevel;
 
         return `
           <div class="card ${isLocked ? 'locked' : ''}">
             <div>
-              <div class="tier-badge">${article.access_tier.toUpperCase()}</div>
+              <div class="tier-badge">${(article.tier_required || 'free').toUpperCase()}</div>
               <h3>${article.title}</h3>
               <p>${article.summary || 'No summary available.'}</p>
             </div>
@@ -138,7 +138,7 @@
       const article = window.articlesCache.find(a => a.id == id);
       if (!article) return;
 
-      document.getElementById('drawerTier').textContent = article.access_tier.toUpperCase();
+      document.getElementById('drawerTier').textContent = (article.tier_required || 'free').toUpperCase();
       document.getElementById('drawerTitle').textContent = article.title;
       document.getElementById('drawerBody').textContent = article.content || article.summary;
       document.getElementById('articleDrawer').classList.add('open');
