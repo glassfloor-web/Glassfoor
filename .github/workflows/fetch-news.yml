@@ -15,14 +15,14 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '20'
 
       - name: Install Dependencies
-        run: npm install @supabase/supabase-js
+        run: npm install
 
       - name: Execute Pipeline Script
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: "https://wclodubfdmmqfwsznzbs.supabase.co"
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: node pipeline.js
