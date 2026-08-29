@@ -12,14 +12,21 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function generateDetailedSummary(headline, snippet) {
   try {
-    const prompt = `Analyze this market news headline and details:
+    const prompt = `You are a Senior Financial Analyst. Analyze this market news event thoroughly and output a full, multi-paragraph breakdown:
+
 Headline: "${headline}"
 Context: "${snippet}"
 
-Provide a concise 3-part financial breakdown:
-1. Executive Summary
-2. Market Impact (Sectors or assets affected)
-3. Key Takeaway for Traders`;
+Format your response strictly using these 3 bold sections:
+
+**1. Executive Summary**
+Provide a 2-3 sentence clear explanation of the financial event, macro context, and core narrative.
+
+**2. Market Impact**
+Detail the specific asset classes, industry sectors, equities, or macroeconomic indicators directly affected by this news.
+
+**3. Key Takeaway for Traders**
+Give an actionable insight or risk assessment for portfolio managers and retail traders.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -37,7 +44,8 @@ async function fetchAndSaveNews() {
   console.log('Fetching live market news...');
   
   try {
-    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://finance.yahoo.com/news/rssindex');
+    // Seeking Alpha Market News feed provides rich full-paragraph snippets
+    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://seekingalpha.com/market_currents.xml');
     const data = await res.json();
     
     if (!data.items || data.items.length === 0) {
@@ -46,7 +54,6 @@ async function fetchAndSaveNews() {
     }
 
     for (const item of data.items.slice(0, 5)) {
-      // Fallback to title if description/snippet is missing or blank
       const cleanSnippet = item.description && item.description.trim() !== '' 
         ? item.description.replace(/<[^>]*>?/gm, '') 
         : item.title;
