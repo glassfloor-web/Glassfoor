@@ -12,21 +12,20 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function generateDetailedSummary(headline, snippet) {
   try {
-    const prompt = `You are a Senior Financial Analyst. Analyze this market news event thoroughly and output a full, multi-paragraph breakdown:
+    const prompt = `You are a Senior Wall Street Financial Analyst. 
 
-Headline: "${headline}"
-Context: "${snippet}"
+Analyze this financial news story based on the headline: "${headline}" and context: "${snippet}".
 
-Format your response strictly using these 3 bold sections:
+Provide a comprehensive, highly detailed market breakdown. You MUST write at least 2-3 detailed sentences for each of the 3 sections below:
 
 **1. Executive Summary**
-Provide a 2-3 sentence clear explanation of the financial event, macro context, and core narrative.
+Explain the event in depth. What is happening, why is it significant for the company or economy, and what macro factors are at play?
 
 **2. Market Impact**
-Detail the specific asset classes, industry sectors, equities, or macroeconomic indicators directly affected by this news.
+Which specific sectors, equities, bonds, commodities, or currencies will move because of this? Detail expected price action or sentiment shifts.
 
 **3. Key Takeaway for Traders**
-Give an actionable insight or risk assessment for portfolio managers and retail traders.`;
+What action should portfolio managers or traders consider? Detail key price levels, risk metrics, or strategic repositioning.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -35,7 +34,7 @@ Give an actionable insight or risk assessment for portfolio managers and retail 
 
     return response.text;
   } catch (err) {
-    console.error('Gemini summary failed, falling back to RSS snippet:', err.message);
+    console.error('Gemini summary failed, falling back to snippet:', err.message);
     return snippet;
   }
 }
@@ -44,8 +43,7 @@ async function fetchAndSaveNews() {
   console.log('Fetching live market news...');
   
   try {
-    // Seeking Alpha Market News feed provides rich full-paragraph snippets
-    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://seekingalpha.com/market_currents.xml');
+    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://finance.yahoo.com/news/rssindex');
     const data = await res.json();
     
     if (!data.items || data.items.length === 0) {
