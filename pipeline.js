@@ -37,8 +37,8 @@ async function fetchAndSaveNews() {
   console.log('Fetching live market news...');
   
   try {
-    // Switched to CNBC Top News for clean business/financial content
-    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://search.cnbc.com/rs/search/combinedAsset/rss/search.rss?term=market&article=1');
+    // Pure financial news stream via Yahoo Finance RSS
+    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://finance.yahoo.com/news/rssindex');
     const data = await res.json();
     
     if (!data.items || data.items.length === 0) {
