@@ -12,9 +12,9 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function generateDetailedSummary(headline, snippet) {
   try {
-    const prompt = `Analyze this market news item:
+    const prompt = `Analyze this market news headline and details:
 Headline: "${headline}"
-Snippet: "${snippet}"
+Context: "${snippet}"
 
 Provide a concise 3-part financial breakdown:
 1. Executive Summary
@@ -37,7 +37,6 @@ async function fetchAndSaveNews() {
   console.log('Fetching live market news...');
   
   try {
-    // Pure financial news stream via Yahoo Finance RSS
     const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://finance.yahoo.com/news/rssindex');
     const data = await res.json();
     
@@ -47,7 +46,10 @@ async function fetchAndSaveNews() {
     }
 
     for (const item of data.items.slice(0, 5)) {
-      const rawSnippet = item.description ? item.description.replace(/<[^>]*>?/gm, '') : 'No summary provided.';
+      // Fallback to title if description/snippet is missing or blank
+      const cleanSnippet = item.description && item.description.trim() !== '' 
+        ? item.description.replace(/<[^>]*>?/gm, '') 
+        : item.title;
       
       const { data: existing } = await supabase
         .from('knowledge_repository')
@@ -60,12 +62,12 @@ async function fetchAndSaveNews() {
       }
 
       console.log(`Generating AI summary for: "${item.title}"...`);
-      const aiSummary = await generateDetailedSummary(item.title, rawSnippet);
+      const aiSummary = await generateDetailedSummary(item.title, cleanSnippet);
 
       const articlePayload = {
         title: item.title,
         summary: aiSummary,
-        content: item.content ? item.content.replace(/<[^>]*>?/gm, '') : rawSnippet,
+        content: cleanSnippet,
         tier_required: 'free',
         category: 'Macro'
       };
