@@ -28,8 +28,9 @@ Which specific sectors, equities, bonds, commodities, or currencies will move be
 **3. Key Takeaway for Traders**
 What action should portfolio managers or traders consider? Detail key risk metrics or strategic positioning.`;
 
+  // Updated to stable model identifier
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-1.5-flash',
     contents: prompt,
   });
 
@@ -74,7 +75,7 @@ async function fetchAndSaveNews() {
         aiSummary = await generateDetailedSummary(item.title, cleanSnippet);
       } catch (geminiErr) {
         console.error(`❌ GEMINI FAILED FOR "${item.title}":`, geminiErr.message);
-        throw geminiErr; // Stop execution so we can see why it failed in GitHub logs
+        throw geminiErr;
       }
 
       const articlePayload = {
