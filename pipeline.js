@@ -1,7 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 
-// Sanitize URL inputs to prevent empty string crashes from GitHub Secrets
 const rawUrl = process.env.SUPABASE_URL?.trim();
 const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.SUPABASE_ANON_KEY?.trim();
 
@@ -9,8 +8,6 @@ const SUPABASE_URL = rawUrl && rawUrl !== "" ? rawUrl : "https://wclodubfdmmqfws
 const SUPABASE_ANON_KEY = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Explicitly pass GEMINI_API_KEY to the GoogleGenAI instance
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function generateDetailedSummary(headline, snippet) {
@@ -32,7 +29,7 @@ Provide a concise 3-part financial breakdown:
     return response.text;
   } catch (err) {
     console.error('Gemini summary failed, falling back to RSS snippet:', err.message);
-    return snippet; // Fallback to raw text if AI call fails
+    return snippet;
   }
 }
 
@@ -40,7 +37,8 @@ async function fetchAndSaveNews() {
   console.log('Fetching live market news...');
   
   try {
-    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.content.dowjones.io/public/rss/mw_topstories');
+    // Switched to CNBC Top News for clean business/financial content
+    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://search.cnbc.com/rs/search/combinedAsset/rss/search.rss?term=market&article=1');
     const data = await res.json();
     
     if (!data.items || data.items.length === 0) {
