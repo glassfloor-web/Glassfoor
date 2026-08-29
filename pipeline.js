@@ -11,32 +11,33 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function generateDetailedSummary(headline, snippet) {
-  try {
-    const prompt = `You are a Senior Wall Street Financial Analyst. 
+  const prompt = `You are a Senior Wall Street Financial Analyst. 
 
-Analyze this financial news story based on the headline: "${headline}" and context: "${snippet}".
+Analyze this news item:
+Headline: "${headline}"
+Snippet Context: "${snippet}"
 
-Provide a comprehensive, highly detailed market breakdown. You MUST write at least 2-3 detailed sentences for each of the 3 sections below:
+Provide a comprehensive, multi-paragraph analysis. You MUST write at least 2-3 thorough sentences for each section:
 
 **1. Executive Summary**
-Explain the event in depth. What is happening, why is it significant for the company or economy, and what macro factors are at play?
+Explain the event in depth. What is happening, why is it significant for the business/economy, and what macro factors are at play?
 
 **2. Market Impact**
 Which specific sectors, equities, bonds, commodities, or currencies will move because of this? Detail expected price action or sentiment shifts.
 
 **3. Key Takeaway for Traders**
-What action should portfolio managers or traders consider? Detail key price levels, risk metrics, or strategic repositioning.`;
+What action should portfolio managers or traders consider? Detail key risk metrics or strategic positioning.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+  });
 
-    return response.text;
-  } catch (err) {
-    console.error('Gemini summary failed, falling back to snippet:', err.message);
-    return snippet;
+  if (!response.text) {
+    throw new Error('Gemini returned an empty response.');
   }
+
+  return response.text;
 }
 
 async function fetchAndSaveNews() {
@@ -67,7 +68,14 @@ async function fetchAndSaveNews() {
       }
 
       console.log(`Generating AI summary for: "${item.title}"...`);
-      const aiSummary = await generateDetailedSummary(item.title, cleanSnippet);
+      
+      let aiSummary;
+      try {
+        aiSummary = await generateDetailedSummary(item.title, cleanSnippet);
+      } catch (geminiErr) {
+        console.error(`❌ GEMINI FAILED FOR "${item.title}":`, geminiErr.message);
+        throw geminiErr; // Stop execution so we can see why it failed in GitHub logs
+      }
 
       const articlePayload = {
         title: item.title,
@@ -84,11 +92,11 @@ async function fetchAndSaveNews() {
       if (error) {
         console.error('Error inserting article:', error.message);
       } else {
-        console.log(`Successfully added: "${item.title}"`);
+        console.log(`Successfully added multi-paragraph AI summary for: "${item.title}"`);
       }
     }
   } catch (err) {
-    console.error('Pipeline failed:', err);
+    console.error('Pipeline process failed:', err);
     process.exit(1);
   }
 }
