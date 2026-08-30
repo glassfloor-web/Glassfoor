@@ -3,222 +3,298 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Glassfloor — Knowledge Repository</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <title>glassfloor — Research Repository</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #0B0B0B; color: #fff; padding-top: 100px; min-height: 100vh; }
-    
-    nav { 
-      display: flex; justify-content: space-between; align-items: center; 
-      padding: 24px 40px; position: fixed; top: 0; left: 0; right: 0; z-index: 30; 
-      background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #1C1C1C; 
+    :root {
+      --bg: #0a0a0a;
+      --card-bg: #121212;
+      --card-border: #222222;
+      --text-main: #f0f0f0;
+      --text-muted: #888888;
+      --accent: #ffffff;
     }
-    .logo { font-weight: 800; font-size: 16px; color: #fff; text-decoration: none; }
-    .nav-right { display: flex; gap: 12px; align-items: center; }
-    .nav-btn { font-size: 13px; padding: 9px 18px; border-radius: 100px; font-weight: 600; border: 1px solid #333; color: #fff; background: transparent; cursor: pointer; text-decoration: none; }
 
-    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-    .header { margin-bottom: 30px; text-align: left; }
-    .header h1 { font-size: 42px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
-    .header p { color: #8A8A8A; font-size: 16px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-    /* Controls: Search Bar & Category Filters */
-    .controls { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
-    .search-input { width: 100%; background: #131316; border: 1px solid #232327; color: #fff; padding: 14px 18px; border-radius: 8px; font-size: 14px; outline: none; }
-    .search-input:focus { border-color: #444; }
-    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-    .filter-btn { background: #131316; border: 1px solid #232327; color: #8A8A8A; padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
-    .filter-btn.active, .filter-btn:hover { background: #fff; color: #0B0B0B; border-color: #fff; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 2rem;
+      min-height: 100vh;
+    }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-    .card { background: #131316; border: 1px solid #232327; border-radius: 12px; padding: 24px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
-    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .tier-badge { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 100px; border: 1px solid #333; color: #8A8A8A; }
-    .category-tag { font-size: 11px; color: #666; font-weight: 600; text-transform: capitalize; }
-    .card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
-    .card p { font-size: 13.5px; color: #8A8A8A; line-height: 1.6; margin-bottom: 20px; }
-    .read-btn { background: #fff; color: #0B0B0B; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; align-self: flex-start; }
-    
-    .locked { opacity: 0.6; }
-    .locked .read-btn { background: #222; color: #777; cursor: not-allowed; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto 3rem auto;
+    }
 
-    /* Article Reader Drawer */
-    .drawer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: flex-end; }
-    .drawer.open { display: flex; }
-    .drawer-content { background: #131316; width: 100%; max-width: 600px; height: 100%; padding: 40px; overflow-y: auto; border-left: 1px solid #232327; position: relative; }
-    .close-drawer { position: absolute; top: 20px; right: 20px; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
-    .drawer h2 { font-size: 28px; font-weight: 800; margin-bottom: 16px; }
-    .drawer-body { color: #CCCCCC; font-size: 15px; line-height: 1.8; margin-top: 24px; white-space: pre-wrap; }
+    .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-btn {
+      background: #1a1a1a;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 0.5rem 1.2rem;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 480px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .badges {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: #1e1e1e;
+      color: var(--text-muted);
+      border: 1px solid #333;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+      color: var(--text-main);
+    }
+
+    .card-snippet {
+      font-size: 0.825rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 10;
+      -webkit-box-orient: vertical;
+      white-space: pre-line;
+    }
+
+    .read-btn {
+      margin-top: 1rem;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+
+    .read-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Modal / Drawer Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      z-index: 90;
+    }
+
+    /* Side Drawer */
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -550px;
+      width: 100%;
+      max-width: 550px;
+      height: 100vh;
+      background: #111111;
+      border-left: 1px solid #222;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+      z-index: 100;
+      transition: right 0.3s ease-in-out;
+      padding: 2.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .overlay.open {
+      display: block;
+    }
+
+    .close-btn {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+
+    .drawer-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 1.5rem;
+    }
+
+    .drawer-body {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #cccccc;
+      white-space: pre-line;
+    }
+
+    .loading {
+      text-align: center;
+      grid-column: 1 / -1;
+      color: var(--text-muted);
+      padding: 4rem;
+    }
   </style>
 </head>
 <body>
 
-  <nav>
-    <a href="index.html" class="logo">glassfloor</a>
-    <div class="nav-right" id="navRight">
-      <a href="index.html" class="nav-btn">Home</a>
-    </div>
-  </nav>
+  <header>
+    <div class="logo">glassfloor</div>
+    <a href="index.html" class="nav-btn">Home</a>
+  </header>
 
-  <div class="container">
-    <div class="header">
-      <h1>Repository</h1>
-      <p>Plain-English breakdown archives and market debriefs.</p>
-    </div>
+  <main class="grid" id="repository-grid">
+    <div class="loading">Loading research breakdowns...</div>
+  </main>
 
-    <!-- Search & Filter Controls -->
-    <div class="controls">
-      <input type="text" id="searchInput" class="search-input" placeholder="Search by title, topic, or keyword..." oninput="filterArticles()">
-      <div class="filters">
-        <button class="filter-btn active" onclick="setCategory('all', this)">All</button>
-        <button class="filter-btn" onclick="setCategory('macro', this)">Macro</button>
-        <button class="filter-btn" onclick="setCategory('equities', this)">Equities</button>
-        <button class="filter-btn" onclick="setCategory('crypto', this)">Crypto</button>
-        <button class="filter-btn" onclick="setCategory('policy', this)">Policy</button>
-      </div>
+  <!-- Side Drawer Modal -->
+  <div class="overlay" id="drawer-overlay" onclick="closeModal()"></div>
+  <div class="drawer" id="modal-drawer">
+    <button class="close-btn" onclick="closeModal()">&times;</button>
+    <div class="badges">
+      <span class="badge">Analysis</span>
+      <span class="badge" id="modal-tier">FREE</span>
     </div>
-
-    <div class="grid" id="articlesGrid">
-      <p style="color: #666;">Loading repository content...</p>
-    </div>
+    <h2 class="drawer-title" id="modal-title"></h2>
+    <div class="drawer-body" id="modal-body"></div>
   </div>
 
-  <!-- Article Drawer -->
-  <div class="drawer" id="articleDrawer">
-    <div class="drawer-content">
-      <button class="close-drawer" onclick="closeDrawer()">×</button>
-      <div class="tier-badge" id="drawerTier">FREE</div>
-      <h2 id="drawerTitle">Article Title</h2>
-      <div class="drawer-body" id="drawerBody">Body text loads here...</div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-    const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co"; 
+  <script>
+    const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let currentUserTier = 'free';
-    let allArticles = [];
-    let selectedCategory = 'all';
+    // Clean Markdown artifacts for presentation
+    function cleanText(text) {
+      if (!text) return '';
+      return text
+        .replace(/#{1,6}\s?/g, '')
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .trim();
+    }
 
-    const tierHierarchy = { free: 1, mid: 2, pro: 3 };
-
-    async function initRepository() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase.from('user_profiles').select('tier').eq('id', session.user.id).single();
-        if (profile) currentUserTier = profile.tier || 'free';
-      }
-
-      // Fetch articles ordered newest-first
-      const { data: articles, error } = await supabase
+    async function loadRepository() {
+      const grid = document.getElementById('repository-grid');
+      
+      const { data: articles, error } = await db
         .from('knowledge_repository')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
       if (error || !articles || articles.length === 0) {
-        document.getElementById('articlesGrid').innerHTML = '<p style="color: #8A8A8A;">No articles found in the repository yet.</p>';
-      } else {
-        allArticles = articles;
-        window.articlesCache = articles;
-        renderArticles(allArticles);
-      }
-
-      // Supabase Realtime Subscription for live updates
-      supabase
-        .channel('realtime_articles')
-        .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'knowledge_repository' }, 
-          (payload) => {
-            allArticles.unshift(payload.new);
-            window.articlesCache = allArticles;
-            filterArticles();
-          }
-        )
-        .subscribe();
-    }
-
-    function renderArticles(articlesToRender) {
-      const grid = document.getElementById('articlesGrid');
-
-      if (articlesToRender.length === 0) {
-        grid.innerHTML = '<p style="color: #8A8A8A;">No articles match your search criteria.</p>';
+        grid.innerHTML = `<div class="loading">No reports available in repository.</div>`;
         return;
       }
 
-      grid.innerHTML = articlesToRender.map(article => {
-        const tier = article.tier_required || article.access_tier || 'free';
-        const articleLevel = tierHierarchy[tier] || 1;
-        const userLevel = tierHierarchy[currentUserTier] || 1;
-        const isLocked = articleLevel > userLevel;
-        const category = article.category || 'Macro';
+      grid.innerHTML = '';
 
-        return `
-          <div class="card ${isLocked ? 'locked' : ''}">
-            <div>
-              <div class="card-top">
-                <span class="tier-badge">${tier.toUpperCase()}</span>
-                <span class="category-tag">${category}</span>
-              </div>
-              <h3>${article.title}</h3>
-              <p>${article.summary || 'No summary available.'}</p>
+      articles.forEach((article) => {
+        const cleanSummary = cleanText(article.summary || article.content);
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        card.innerHTML = `
+          <div>
+            <div class="badges">
+              <span class="badge">${article.tier_required || 'FREE'}</span>
+              <span class="badge">${article.category || 'MACRO'}</span>
             </div>
-            <button class="read-btn" onclick="openArticle('${article.id}', ${isLocked})">
-              ${isLocked ? '🔒 Upgrade to Access' : 'Read Breakdown'}
-            </button>
+            <h3 class="card-title">${article.title}</h3>
+            <div class="card-snippet">${cleanSummary}</div>
           </div>
+          <button class="read-btn">Read Breakdown</button>
         `;
-      }).join('');
+
+        card.querySelector('.read-btn').addEventListener('click', () => {
+          openModal(article.title, cleanSummary, article.tier_required);
+        });
+
+        grid.appendChild(card);
+      });
     }
 
-    window.filterArticles = () => {
-      const query = document.getElementById('searchInput').value.toLowerCase();
+    function openModal(title, summaryText, tier) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').textContent = summaryText;
+      document.getElementById('modal-tier').textContent = tier || 'FREE';
 
-      const filtered = allArticles.filter(article => {
-        const matchesQuery = (article.title && article.title.toLowerCase().includes(query)) ||
-                             (article.summary && article.summary.toLowerCase().includes(query));
-        
-        const articleCategory = (article.category || 'macro').toLowerCase();
-        const matchesCategory = selectedCategory === 'all' || articleCategory === selectedCategory;
+      document.getElementById('modal-drawer').classList.add('open');
+      document.getElementById('drawer-overlay').classList.add('open');
+    }
 
-        return matchesQuery && matchesCategory;
-      });
+    function closeModal() {
+      document.getElementById('modal-drawer').classList.remove('open');
+      document.getElementById('drawer-overlay').classList.remove('open');
+    }
 
-      renderArticles(filtered);
-    };
-
-    window.setCategory = (category, btn) => {
-      selectedCategory = category;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filterArticles();
-    };
-
-    window.openArticle = (id, isLocked) => {
-      if (isLocked) {
-        alert(`This article requires a higher tier plan.`);
-        return;
-      }
-      const article = window.articlesCache.find(a => a.id == id);
-      if (!article) return;
-
-      const tier = article.tier_required || article.access_tier || 'free';
-      document.getElementById('drawerTier').textContent = tier.toUpperCase();
-      document.getElementById('drawerTitle').textContent = article.title;
-      document.getElementById('drawerBody').textContent = article.content || article.summary;
-      document.getElementById('articleDrawer').classList.add('open');
-    };
-
-    window.closeDrawer = () => {
-      document.getElementById('articleDrawer').classList.remove('open');
-    };
-
-    initRepository();
+    loadRepository();
   </script>
 </body>
 </html>
