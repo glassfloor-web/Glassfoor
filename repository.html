@@ -192,10 +192,10 @@
         <div class="filter-bar" id="filter-bar">
             <button class="filter-tab active" onclick="filterCategory('All')">All Categories</button>
             <button class="filter-tab" onclick="filterCategory('Insider Trading')">Insider Trading</button>
-            <button class="filter-tab" onclick="filterCategory('Personal Finance & Banking')">Personal Finance</button>
+            <button class="filter-tab" onclick="filterCategory('Personal Finance')">Personal Finance</button>
             <button class="filter-tab" onclick="filterCategory('Equities & Earnings')">Equities & Earnings</button>
             <button class="filter-tab" onclick="filterCategory('Macro & Central Banks')">Macro & Central Banks</button>
-            <button class="filter-tab" onclick="filterCategory('Crypto & Digital Assets')">Crypto & Web3</button>
+            <button class="filter-tab" onclick="filterCategory('Crypto')">Crypto & Web3</button>
         </div>
 
         <div id="articles-container">
@@ -280,10 +280,11 @@
         }
 
         function filterCategory(category) {
-            // Highlight active filter tab
             const tabs = document.querySelectorAll('.filter-tab');
+            
             tabs.forEach(tab => {
-                if (tab.innerText.toLowerCase().includes(category.toLowerCase()) || (category === 'All' && tab.innerText.includes('All'))) {
+                if (tab.innerText.toLowerCase().includes(category.toLowerCase()) || 
+                   (category === 'All' && tab.innerText.includes('All'))) {
                     tab.classList.add('active');
                 } else {
                     tab.classList.remove('active');
@@ -293,7 +294,11 @@
             if (category === 'All') {
                 renderArticles(allArticles);
             } else {
-                const filtered = allArticles.filter(a => a.category && a.category.toLowerCase().includes(category.toLowerCase()));
+                const filtered = allArticles.filter(a => {
+                    const cat = (a.category || '').toLowerCase();
+                    const target = category.toLowerCase();
+                    return cat.includes(target) || target.includes(cat);
+                });
                 renderArticles(filtered);
             }
         }
