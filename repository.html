@@ -1,254 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glassfloor - Knowledge Repository</title>
-    <!-- Supabase JS Client CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+import { createClient } from '@supabase/supabase-js';
+import { GoogleGenAI } from '@google/genai';
+
+// Initialize Supabase Client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Initialize Google Gen AI Client
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// Rate-limiting delay helper
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Uses Gemini 2.5 Flash to generate a structured analysis AND assign a category tag.
+ */
+async function generateDetailedSummary(headline, snippet, retries = 3) {
+  const prompt = `You are a Senior Wall Street Financial Analyst.
+
+Analyze this news item:
+Headline: "${headline}"
+Snippet Context: "${snippet}"
+
+Step 1: Determine the single best matching category for this article from this exact list:
+- "Insider Trading"
+- "Personal Finance & Banking"
+- "Equities & Earnings"
+- "Crypto & Digital Assets"
+- "Real Estate & Commodities"
+- "Macro & Central Banks"
+
+Step 2: Provide a detailed financial analysis without using Markdown asterisks, bolding, or hashtag headers. Format as clean plain text:
+1. Executive Summary: 2-3 sentences explaining the event, its economic significance, and underlying factors.
+2. Market Impact: Specific sectors, equities, bonds, or commodities affected.
+3. Key Takeaway: Actionable risk metrics or strategic positioning.
+
+Respond strictly in valid JSON format with no Markdown code block wrappers:
+{
+  "category": "Exact Category Name",
+  "summary": "1. Executive Summary\\n...\\n\\n2. Market Impact\\n...\\n\\n3. Key Takeaway\\n..."
+}`;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      if (response && response.text) {
+        // Strip out any accidental Markdown backticks
+        const cleanedText = response.text
+          .replace(/```json/gi, '')
+          .replace(/```/g, '')
+          .trim();
+
+        return JSON.parse(cleanedText);
+      }
+    } catch (err) {
+      if (attempt < retries) {
+        const backoff = attempt * 6000;
+        console.warn(`⚠️ API attempt ${attempt} failed (${err.message}). Retrying in ${backoff / 1000}s...`);
+        await sleep(backoff);
+      } else {
+        console.error(` Failed to summarize after ${retries} attempts: "${headline}"`);
+        return {
+          category: "Macro & Central Banks",
+          summary: `${headline}\n\nAnalysis temporarily unavailable due to processing timeout.`
+        };
+      }
+    }
+  }
+}
+
+/**
+ * Main Pipeline Function
+ */
+async function runPipeline() {
+  console.log("Fetching live market news...");
+
+  // Example news payload array (replace with your RSS / API news fetcher)
+  const fetchedArticles = [
+    {
+      title: "Central Garden & Pet Chairman Sells 3,900 Shares for $152,100",
+      snippet: "Executive stock sale transaction filed under SEC Form 4 rules.",
+      source: "SEC Filings"
+    },
+    {
+      title: "Best CD rates today: Lock in up to 4.30% APY with a 16- or 18-month CD",
+      snippet: "Yield comparisons for personal savings and fixed income certificates of deposit.",
+      source: "Bankrate"
+    },
+    {
+      title: "A bankruptcy attorney explains exactly when creditors can garnish your 401(k)",
+      snippet: "Legal protections for retirement assets under ERISA guidelines during debt collection.",
+      source: "MarketWatch"
+    }
+  ];
+
+  for (const article of fetchedArticles) {
+    console.log(`Analyzing & categorizing: "${article.title}"...`);
+
+    const aiResult = await generateDetailedSummary(article.title, article.snippet);
+
+    // Save directly to Supabase with dynamic category
+    const { data, error } = await supabase
+      .from('knowledge_repository')
+      .insert([
+        {
+          title: article.title,
+          summary: aiResult.summary,
+          category: aiResult.category,
+          source: article.source || 'Live Market Feed',
+          created_at: new Date().toISOString()
         }
+      ]);
 
-        body {
-            background-color: #0d0e12;
-            color: #e1e3e6;
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-        }
+    if (error) {
+      console.error(`Error inserting "${article.title}":`, error.message);
+    } else {
+      console.log(` Saved [Category: ${aiResult.category}]: "${article.title}"`);
+    }
 
-        .container {
-            max-width: 900px;
-            width: 100%;
-        }
+    // 6-second delay between items to avoid rate limit spikes
+    await sleep(6000);
+  }
 
-        header {
-            margin-bottom: 35px;
-            border-bottom: 1px solid #232733;
-            padding-bottom: 20px;
-        }
+  console.log("Pipeline run complete!");
+}
 
-        header h1 {
-            font-size: 28px;
-            color: #ffffff;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
-        }
-
-        header p {
-            color: #8b92a0;
-            font-size: 14px;
-        }
-
-        .loading-state, .empty-state, .error-state {
-            padding: 40px;
-            text-align: center;
-            background: #141721;
-            border: 1px solid #232733;
-            border-radius: 8px;
-            color: #8b92a0;
-        }
-
-        .article-card {
-            background: #141721;
-            border: 1px solid #232733;
-            border-radius: 10px;
-            padding: 24px;
-            margin-bottom: 24px;
-            transition: border-color 0.2s ease;
-        }
-
-        .article-card:hover {
-            border-color: #3b4254;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .tag {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: rgba(0, 230, 118, 0.1);
-            color: #00e676;
-            border: 1px solid rgba(0, 230, 118, 0.2);
-        }
-
-        .article-title {
-            font-size: 20px;
-            color: #f0f2f5;
-            font-weight: 600;
-            line-height: 1.4;
-            margin-bottom: 16px;
-        }
-
-        .mode-toggle-bar {
-            display: inline-flex;
-            background: #0d0e12;
-            padding: 3px;
-            border-radius: 6px;
-            border: 1px solid #232733;
-            margin-bottom: 18px;
-        }
-
-        .mode-btn {
-            background: transparent;
-            border: none;
-            color: #8b92a0;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .mode-btn.active {
-            background: #232733;
-            color: #ffffff;
-        }
-
-        .article-body {
-            font-size: 14px;
-            line-height: 1.65;
-            color: #c2c7d0;
-            white-space: pre-line;
-        }
-
-        .simplified-box {
-            background: rgba(41, 98, 255, 0.08);
-            border-left: 3px solid #2962ff;
-            padding: 14px 16px;
-            border-radius: 0 6px 6px 0;
-            color: #d1dbe6;
-        }
-
-        .card-footer {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #1c202b;
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #636b7b;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <header>
-            <h1>Knowledge Repository</h1>
-            <p>Automated macro research, institutional breakdowns, and simplified market analysis.</p>
-        </header>
-
-        <div id="articles-container">
-            <div class="loading-state">Loading intelligence updates from Supabase...</div>
-        </div>
-    </div>
-
-    <script>
-        const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
-
-        // Correct CDN initialization
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        function getSimplifiedSummary(text) {
-            if (!text) return "No summary available.";
-            const sentences = text.split('. ');
-            return sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '');
-        }
-
-        async function loadRepository() {
-            const container = document.getElementById('articles-container');
-
-            try {
-                const { data: articles, error } = await supabaseClient
-                    .from('knowledge_repository')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) {
-                    console.error("Supabase Error:", error);
-                    throw error;
-                }
-
-                if (!articles || articles.length === 0) {
-                    container.innerHTML = `<div class="empty-state">No analysis reports found in the database.</div>`;
-                    return;
-                }
-
-                container.innerHTML = articles.map(article => {
-                    const fullText = article.summary || article.content || 'No content available.';
-                    const simpleText = getSimplifiedSummary(fullText);
-                    const formattedDate = article.created_at ? new Date(article.created_at).toLocaleDateString() : 'Live';
-
-                    return `
-                        <div class="article-card" id="article-${article.id}">
-                            <div class="card-header">
-                                <span class="tag">${article.category || 'Macro & Market Intelligence'}</span>
-                            </div>
-                            
-                            <h2 class="article-title">${article.title}</h2>
-
-                            <div class="mode-toggle-bar">
-                                <button class="mode-btn active" onclick="toggleMode(${article.id}, 'detailed')">Detailed Analysis</button>
-                                <button class="mode-btn" onclick="toggleMode(${article.id}, 'simple')">Explain Simply</button>
-                            </div>
-
-                            <div class="article-body" id="content-${article.id}">
-                                ${fullText}
-                            </div>
-
-                            <div class="card-footer">
-                                <span>Source: ${article.source || 'Market Feed'}</span>
-                                <span>${formattedDate}</span>
-                            </div>
-
-                            <template id="detailed-data-${article.id}">${fullText}</template>
-                            <template id="simple-data-${article.id}">${simpleText}</template>
-                        </div>
-                    `;
-                }).join('');
-
-            } catch (err) {
-                console.error('Error loading repository:', err);
-                container.innerHTML = `<div class="error-state">Failed to load articles. Check browser console for details or verify Supabase SELECT policies.</div>`;
-            }
-        }
-
-        function toggleMode(articleId, mode) {
-            const card = document.getElementById(`article-${articleId}`);
-            const contentBox = document.getElementById(`content-${articleId}`);
-            const buttons = card.querySelectorAll('.mode-btn');
-
-            buttons.forEach(btn => btn.classList.remove('active'));
-
-            if (mode === 'simple') {
-                buttons[1].classList.add('active');
-                const simpleData = document.getElementById(`simple-data-${articleId}`).innerHTML;
-                contentBox.innerHTML = `<div class="simplified-box"><strong>Key Takeaway:</strong><br>${simpleData}</div>`;
-            } else {
-                buttons[0].classList.add('active');
-                const detailedData = document.getElementById(`detailed-data-${articleId}`).innerHTML;
-                contentBox.innerHTML = detailedData;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', loadRepository);
-    </script>
-</body>
-</html>
+runPipeline();
