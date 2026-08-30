@@ -1,142 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>glassfloor — Research Repository</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root {
-      --bg: #0a0a0a;
-      --card-bg: #121212;
-      --card-border: #222222;
-      --text-main: #f0f0f0;
-      --text-muted: #888888;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glassfloor - Knowledge Repository</title>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { background-color: var(--bg); color: var(--text-main); padding: 2rem; min-height: 100vh; }
+        body {
+            background-color: #0d0e12;
+            color: #e1e3e6;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-    header { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto 3rem auto; }
-    .logo { font-weight: 700; font-size: 1.5rem; }
-    .nav-btn { background: #1a1a1a; color: #fff; border: 1px solid #333; padding: 0.5rem 1.2rem; border-radius: 20px; text-decoration: none; font-size: 0.85rem; }
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
-    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; height: 420px; }
+        header {
+            margin-bottom: 35px;
+            border-bottom: 1px solid #232733;
+            padding-bottom: 20px;
+        }
 
-    .badges { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-    .badge { font-size: 0.65rem; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 4px; background: #1e1e1e; color: var(--text-muted); border: 1px solid #333; }
+        header h1 {
+            font-size: 28px;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
 
-    .card-title { font-size: 1.1rem; font-weight: 600; line-height: 1.4; margin-bottom: 1rem; color: var(--text-main); }
-    .card-snippet { font-size: 0.825rem; line-height: 1.6; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; white-space: pre-line; }
+        header p {
+            color: #8b92a0;
+            font-size: 14px;
+        }
 
-    .read-btn { margin-top: 1rem; background: #ffffff; color: #000000; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; }
+        .loading-state, .empty-state, .error-state {
+            padding: 40px;
+            text-align: center;
+            background: #141721;
+            border: 1px solid #232733;
+            border-radius: 8px;
+            color: #8b92a0;
+        }
 
-    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; z-index: 90; }
-    .drawer { position: fixed; top: 0; right: -550px; width: 100%; max-width: 550px; height: 100vh; background: #111111; border-left: 1px solid #222; z-index: 100; transition: right 0.3s ease; padding: 2.5rem; overflow-y: auto; }
-    .drawer.open { right: 0; }
-    .overlay.open { display: block; }
-    .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; float: right; }
-    .drawer-title { font-size: 1.3rem; margin: 1.5rem 0 1rem 0; }
-    .drawer-body { font-size: 0.9rem; line-height: 1.7; color: #ccc; white-space: pre-line; }
+        .article-card {
+            background: #141721;
+            border: 1px solid #232733;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: border-color 0.2s ease;
+        }
 
-    .status-msg { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 4rem; }
-  </style>
+        .article-card:hover {
+            border-color: #3b4254;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(0, 230, 118, 0.1);
+            color: #00e676;
+            border: 1px solid rgba(0, 230, 118, 0.2);
+        }
+
+        .article-title {
+            font-size: 20px;
+            color: #f0f2f5;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        /* Toggle Button Group */
+        .mode-toggle-bar {
+            display: inline-flex;
+            background: #0d0e12;
+            padding: 3px;
+            border-radius: 6px;
+            border: 1px solid #232733;
+            margin-bottom: 18px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: #8b92a0;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background: #232733;
+            color: #ffffff;
+        }
+
+        .article-body {
+            font-size: 14px;
+            line-height: 1.65;
+            color: #c2c7d0;
+            white-space: pre-line;
+        }
+
+        .simplified-box {
+            background: rgba(41, 98, 255, 0.08);
+            border-left: 3px solid #2962ff;
+            padding: 14px 16px;
+            border-radius: 0 6px 6px 0;
+            color: #d1dbe6;
+        }
+
+        .card-footer {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #1c202b;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #636b7b;
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo">glassfloor</div>
-    <a href="index.html" class="nav-btn">Home</a>
-  </header>
+    <div class="container">
+        <header>
+            <h1>Knowledge Repository</h1>
+            <p>Automated macro research, institutional breakdowns, and simplified market analysis.</p>
+        </header>
 
-  <main class="grid" id="repository-grid">
-    <div class="status-msg" id="status-msg">Fetching records...</div>
-  </main>
-
-  <div class="overlay" id="drawer-overlay" onclick="closeModal()"></div>
-  <div class="drawer" id="modal-drawer">
-    <button class="close-btn" onclick="closeModal()">&times;</button>
-    <div class="badges">
-      <span class="badge" id="modal-tier">FREE</span>
+        <div id="articles-container">
+            <div class="loading-state">Loading intelligence updates from Supabase...</div>
+        </div>
     </div>
-    <h2 class="drawer-title" id="modal-title"></h2>
-    <div class="drawer-body" id="modal-body"></div>
-  </div>
 
-  <script>
-    const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
-    
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <script>
+        // Supabase Client Setup
+        const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
 
-    async function loadRepository() {
-      const grid = document.getElementById('repository-grid');
-      const statusMsg = document.getElementById('status-msg');
+        const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      try {
-        const { data: articles, error } = await db
-          .from('knowledge_repository')
-          .select('*');
-
-        if (error) {
-          console.error('Supabase Error:', error);
-          statusMsg.textContent = `Error fetching data: ${error.message}`;
-          return;
+        // Helper to extract a 1-2 sentence simplified breakdown
+        function getSimplifiedSummary(text) {
+            if (!text) return "No summary available.";
+            const sentences = text.split('. ');
+            return sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '');
         }
 
-        if (!articles || articles.length === 0) {
-          statusMsg.textContent = "Database table 'knowledge_repository' contains 0 records.";
-          return;
+        async function loadRepository() {
+            const container = document.getElementById('articles-container');
+
+            try {
+                // Fetch articles ordered by newest first
+                const { data: articles, error } = await supabase
+                    .from('knowledge_repository')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!articles || articles.length === 0) {
+                    container.innerHTML = `<div class="empty-state">No analysis reports available in the database yet.</div>`;
+                    return;
+                }
+
+                // Render Articles
+                container.innerHTML = articles.map(article => {
+                    const fullText = article.summary || article.content || 'No content available.';
+                    const simpleText = getSimplifiedSummary(fullText);
+                    const formattedDate = article.created_at ? new Date(article.created_at).toLocaleDateString() : 'Live';
+
+                    return `
+                        <div class="article-card" id="article-${article.id}">
+                            <div class="card-header">
+                                <span class="tag">${article.category || 'Macro & Market Intelligence'}</span>
+                            </div>
+                            
+                            <h2 class="article-title">${article.title}</h2>
+
+                            <div class="mode-toggle-bar">
+                                <button class="mode-btn active" onclick="toggleMode(${article.id}, 'detailed')">Detailed Analysis</button>
+                                <button class="mode-btn" onclick="toggleMode(${article.id}, 'simple')">Explain Simply</button>
+                            </div>
+
+                            <div class="article-body" id="content-${article.id}">
+                                ${fullText}
+                            </div>
+
+                            <div class="card-footer">
+                                <span>Source: ${article.source || 'Market Feed'}</span>
+                                <span>${formattedDate}</span>
+                            </div>
+
+                            <!-- Hidden content holders for mode switching -->
+                            <template id="detailed-data-${article.id}">${fullText}</template>
+                            <template id="simple-data-${article.id}">${simpleText}</template>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error('Error fetching articles:', err);
+                container.innerHTML = `<div class="error-state">Failed to load articles. Verify Supabase SELECT policies.</div>`;
+            }
         }
 
-        grid.innerHTML = ''; // Clear loading text
+        // Mode Switcher Function (Detailed vs. Simplified)
+        function toggleMode(articleId, mode) {
+            const card = document.getElementById(`article-${articleId}`);
+            const contentBox = document.getElementById(`content-${articleId}`);
+            const buttons = card.querySelectorAll('.mode-btn');
 
-        articles.forEach((article) => {
-          const bodyText = article.summary || article.content || 'No content provided.';
-          const card = document.createElement('div');
-          card.className = 'card';
+            buttons.forEach(btn => btn.classList.remove('active'));
 
-          card.innerHTML = `
-            <div>
-              <div class="badges">
-                <span class="badge">${article.tier_required || 'FREE'}</span>
-                <span class="badge">${article.category || 'MACRO'}</span>
-              </div>
-              <h3 class="card-title">${article.title}</h3>
-              <div class="card-snippet">${bodyText}</div>
-            </div>
-            <button class="read-btn">Read Breakdown</button>
-          `;
+            if (mode === 'simple') {
+                buttons[1].classList.add('active');
+                const simpleData = document.getElementById(`simple-data-${articleId}`).innerHTML;
+                contentBox.innerHTML = `<div class="simplified-box"><strong>Key Takeaway:</strong><br>${simpleData}</div>`;
+            } else {
+                buttons[0].classList.add('active');
+                const detailedData = document.getElementById(`detailed-data-${articleId}`).innerHTML;
+                contentBox.innerHTML = detailedData;
+            }
+        }
 
-          card.querySelector('.read-btn').addEventListener('click', () => {
-            openModal(article.title, bodyText, article.tier_required);
-          });
-
-          grid.appendChild(card);
-        });
-
-      } catch (err) {
-        console.error('Fetch error:', err);
-        statusMsg.textContent = `Failed to load: ${err.message}`;
-      }
-    }
-
-    function openModal(title, body, tier) {
-      document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-body').textContent = body;
-      document.getElementById('modal-tier').textContent = tier || 'FREE';
-
-      document.getElementById('modal-drawer').classList.add('open');
-      document.getElementById('drawer-overlay').classList.add('open');
-    }
-
-    function closeModal() {
-      document.getElementById('modal-drawer').classList.remove('open');
-      document.getElementById('drawer-overlay').classList.remove('open');
-    }
-
-    loadRepository();
-  </script>
+        document.addEventListener('DOMContentLoaded', loadRepository);
+    </script>
 </body>
 </html>
