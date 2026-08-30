@@ -10,41 +10,45 @@ const SUPABASE_ANON_KEY = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1Ni
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Delay helper for rate limits / 503 spikes
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function generateDetailedSummary(headline, snippet, retries = 2) {
+async function generateDetailedSummary(headline, snippet, retries = 3) {
   const prompt = `You are a Senior Wall Street Financial Analyst. 
 
 Analyze this news item:
 Headline: "${headline}"
 Snippet Context: "${snippet}"
 
-Provide a comprehensive, multi-paragraph analysis. You MUST write at least 2-3 thorough sentences for each section:
+Provide a clean, readable financial analysis without using Markdown asterisks or hashtag headers. Format strictly as standard text paragraphs:
 
-**1. Executive Summary**
-Explain the event in depth. What is happening, why is it significant for the business/economy, and what macro factors are at play?
+1. Executive Summary
+Provide 2-3 sentences explaining the event in depth, its economic significance, and underlying macro factors.
 
-**2. Market Impact**
-Which specific sectors, equities, bonds, commodities, or currencies will move because of this? Detail expected price action or sentiment shifts.
+2. Market Impact
+Detail the specific sectors, equities, bonds, or commodities affected.
 
-**3. Key Takeaway for Traders**
-What action should portfolio managers or traders consider? Detail key risk metrics or strategic positioning.`;
+3. Key Takeaway for Traders
+Provide actionable risk metrics or strategic positioning for portfolio managers.`;
 
-  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-2.5-flash',
         contents: prompt,
       });
 
       if (response && response.text) {
-        return response.text;
+        // Clean out raw Markdown symbols (###, **, *) for clean frontend cards
+        return response.text
+          .replace(/#{1,6}\s?/g, '')
+          .replace(/\*\*/g, '')
+          .replace(/\*/g, '')
+          .trim();
       }
     } catch (err) {
-      if (attempt <= retries) {
-        console.warn(`⚠️ API temporary issue (${err.status || err.message}). Retrying in 3 seconds... (Attempt ${attempt}/${retries})`);
-        await sleep(3000);
+      if (attempt < retries) {
+        console.warn(`⚠️ Temporary API error (${err.status || err.message}). Retrying in 5 seconds... (Attempt ${attempt}/${retries})`);
+        await sleep(5000);
       } else {
         throw err;
       }
@@ -86,13 +90,13 @@ async function fetchAndSaveNews() {
         aiSummary = await generateDetailedSummary(item.title, cleanSnippet);
       } catch (geminiErr) {
         console.error(`⚠️ SKIPPING ARTICLE due to API load: "${item.title}"`);
-        continue; // Skip this individual article and continue with the remaining items
+        continue;
       }
 
       const articlePayload = {
         title: item.title,
-        summary: aiSummary,
-        content: cleanSnippet,
+        summary: aiSummary, // Stores clean AI breakdown
+        content: aiSummary, // Populates content field so modal drawers get full text
         tier_required: 'free',
         category: 'Macro'
       };
@@ -104,11 +108,10 @@ async function fetchAndSaveNews() {
       if (error) {
         console.error('Error inserting article:', error.message);
       } else {
-        console.log(`Successfully added multi-paragraph AI summary for: "${item.title}"`);
+        console.log(`Successfully added clean AI summary for: "${item.title}"`);
       }
       
-      // Brief pause between requests to prevent hitting concurrency limits
-      await sleep(1000);
+      await sleep(2000);
     }
   } catch (err) {
     console.error('Pipeline process failed:', err);
