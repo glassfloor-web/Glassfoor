@@ -12,193 +12,35 @@
       --card-border: #222222;
       --text-main: #f0f0f0;
       --text-muted: #888888;
-      --accent: #ffffff;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); padding: 2rem; min-height: 100vh; }
 
-    body {
-      background-color: var(--bg);
-      color: var(--text-main);
-      padding: 2rem;
-      min-height: 100vh;
-    }
+    header { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto 3rem auto; }
+    .logo { font-weight: 700; font-size: 1.5rem; }
+    .nav-btn { background: #1a1a1a; color: #fff; border: 1px solid #333; padding: 0.5rem 1.2rem; border-radius: 20px; text-decoration: none; font-size: 0.85rem; }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1200px;
-      margin: 0 auto 3rem auto;
-    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; height: 420px; }
 
-    .logo {
-      font-weight: 700;
-      font-size: 1.5rem;
-      letter-spacing: -0.03em;
-    }
+    .badges { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .badge { font-size: 0.65rem; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 4px; background: #1e1e1e; color: var(--text-muted); border: 1px solid #333; }
 
-    .nav-btn {
-      background: #1a1a1a;
-      color: #fff;
-      border: 1px solid #333;
-      padding: 0.5rem 1.2rem;
-      border-radius: 20px;
-      text-decoration: none;
-      font-size: 0.85rem;
-    }
+    .card-title { font-size: 1.1rem; font-weight: 600; line-height: 1.4; margin-bottom: 1rem; color: var(--text-main); }
+    .card-snippet { font-size: 0.825rem; line-height: 1.6; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; white-space: pre-line; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 1.5rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+    .read-btn { margin-top: 1rem; background: #ffffff; color: #000000; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; }
 
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      height: 480px;
-      overflow: hidden;
-      position: relative;
-    }
+    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; z-index: 90; }
+    .drawer { position: fixed; top: 0; right: -550px; width: 100%; max-width: 550px; height: 100vh; background: #111111; border-left: 1px solid #222; z-index: 100; transition: right 0.3s ease; padding: 2.5rem; overflow-y: auto; }
+    .drawer.open { right: 0; }
+    .overlay.open { display: block; }
+    .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; float: right; }
+    .drawer-title { font-size: 1.3rem; margin: 1.5rem 0 1rem 0; }
+    .drawer-body { font-size: 0.9rem; line-height: 1.7; color: #ccc; white-space: pre-line; }
 
-    .badges {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .badge {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      background: #1e1e1e;
-      color: var(--text-muted);
-      border: 1px solid #333;
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      line-height: 1.4;
-      margin-bottom: 1rem;
-      color: var(--text-main);
-    }
-
-    .card-snippet {
-      font-size: 0.825rem;
-      line-height: 1.6;
-      color: var(--text-muted);
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 10;
-      -webkit-box-orient: vertical;
-      white-space: pre-line;
-    }
-
-    .read-btn {
-      margin-top: 1rem;
-      background: #ffffff;
-      color: #000000;
-      border: none;
-      padding: 0.75rem;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      width: 100%;
-      text-align: center;
-      transition: opacity 0.2s;
-    }
-
-    .read-btn:hover {
-      opacity: 0.9;
-    }
-
-    /* Modal / Drawer Overlay */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      display: none;
-      z-index: 90;
-    }
-
-    /* Side Drawer */
-    .drawer {
-      position: fixed;
-      top: 0;
-      right: -550px;
-      width: 100%;
-      max-width: 550px;
-      height: 100vh;
-      background: #111111;
-      border-left: 1px solid #222;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-      z-index: 100;
-      transition: right 0.3s ease-in-out;
-      padding: 2.5rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .drawer.open {
-      right: 0;
-    }
-
-    .overlay.open {
-      display: block;
-    }
-
-    .close-btn {
-      align-self: flex-end;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.5rem;
-      cursor: pointer;
-      margin-bottom: 1rem;
-    }
-
-    .drawer-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 1.5rem;
-    }
-
-    .drawer-body {
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: #cccccc;
-      white-space: pre-line;
-    }
-
-    .loading {
-      text-align: center;
-      grid-column: 1 / -1;
-      color: var(--text-muted);
-      padding: 4rem;
-    }
+    .status-msg { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 4rem; }
   </style>
 </head>
 <body>
@@ -209,15 +51,13 @@
   </header>
 
   <main class="grid" id="repository-grid">
-    <div class="loading">Loading research breakdowns...</div>
+    <div class="status-msg" id="status-msg">Fetching records...</div>
   </main>
 
-  <!-- Side Drawer Modal -->
   <div class="overlay" id="drawer-overlay" onclick="closeModal()"></div>
   <div class="drawer" id="modal-drawer">
     <button class="close-btn" onclick="closeModal()">&times;</button>
     <div class="badges">
-      <span class="badge">Analysis</span>
       <span class="badge" id="modal-tier">FREE</span>
     </div>
     <h2 class="drawer-title" id="modal-title"></h2>
@@ -230,59 +70,61 @@
     
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Clean Markdown artifacts for presentation
-    function cleanText(text) {
-      if (!text) return '';
-      return text
-        .replace(/#{1,6}\s?/g, '')
-        .replace(/\*\*/g, '')
-        .replace(/\*/g, '')
-        .trim();
-    }
-
     async function loadRepository() {
       const grid = document.getElementById('repository-grid');
-      
-      const { data: articles, error } = await db
-        .from('knowledge_repository')
-        .select('*')
-        .order('id', { ascending: false });
+      const statusMsg = document.getElementById('status-msg');
 
-      if (error || !articles || articles.length === 0) {
-        grid.innerHTML = `<div class="loading">No reports available in repository.</div>`;
-        return;
-      }
+      try {
+        const { data: articles, error } = await db
+          .from('knowledge_repository')
+          .select('*');
 
-      grid.innerHTML = '';
+        if (error) {
+          console.error('Supabase Error:', error);
+          statusMsg.textContent = `Error fetching data: ${error.message}`;
+          return;
+        }
 
-      articles.forEach((article) => {
-        const cleanSummary = cleanText(article.summary || article.content);
-        const card = document.createElement('div');
-        card.className = 'card';
+        if (!articles || articles.length === 0) {
+          statusMsg.textContent = "Database table 'knowledge_repository' contains 0 records.";
+          return;
+        }
 
-        card.innerHTML = `
-          <div>
-            <div class="badges">
-              <span class="badge">${article.tier_required || 'FREE'}</span>
-              <span class="badge">${article.category || 'MACRO'}</span>
+        grid.innerHTML = ''; // Clear loading text
+
+        articles.forEach((article) => {
+          const bodyText = article.summary || article.content || 'No content provided.';
+          const card = document.createElement('div');
+          card.className = 'card';
+
+          card.innerHTML = `
+            <div>
+              <div class="badges">
+                <span class="badge">${article.tier_required || 'FREE'}</span>
+                <span class="badge">${article.category || 'MACRO'}</span>
+              </div>
+              <h3 class="card-title">${article.title}</h3>
+              <div class="card-snippet">${bodyText}</div>
             </div>
-            <h3 class="card-title">${article.title}</h3>
-            <div class="card-snippet">${cleanSummary}</div>
-          </div>
-          <button class="read-btn">Read Breakdown</button>
-        `;
+            <button class="read-btn">Read Breakdown</button>
+          `;
 
-        card.querySelector('.read-btn').addEventListener('click', () => {
-          openModal(article.title, cleanSummary, article.tier_required);
+          card.querySelector('.read-btn').addEventListener('click', () => {
+            openModal(article.title, bodyText, article.tier_required);
+          });
+
+          grid.appendChild(card);
         });
 
-        grid.appendChild(card);
-      });
+      } catch (err) {
+        console.error('Fetch error:', err);
+        statusMsg.textContent = `Failed to load: ${err.message}`;
+      }
     }
 
-    function openModal(title, summaryText, tier) {
+    function openModal(title, body, tier) {
       document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-body').textContent = summaryText;
+      document.getElementById('modal-body').textContent = body;
       document.getElementById('modal-tier').textContent = tier || 'FREE';
 
       document.getElementById('modal-drawer').classList.add('open');
