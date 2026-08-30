@@ -33,12 +33,12 @@ Provide actionable risk metrics or strategic positioning for portfolio managers.
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.6-flash',
         contents: prompt,
       });
 
       if (response && response.text) {
-        // Clean out raw Markdown symbols (###, **, *) for clean frontend cards
+        // Strip out raw Markdown symbols (###, **, *) for clean frontend rendering
         return response.text
           .replace(/#{1,6}\s?/g, '')
           .replace(/\*\*/g, '')
@@ -47,7 +47,7 @@ Provide actionable risk metrics or strategic positioning for portfolio managers.
       }
     } catch (err) {
       if (attempt < retries) {
-        console.warn(`⚠️ Temporary API error (${err.status || err.message}). Retrying in 5 seconds... (Attempt ${attempt}/${retries})`);
+        console.warn(`⚠️ Temporary API issue (${err.status || err.message}). Retrying in 5 seconds... (Attempt ${attempt}/${retries})`);
         await sleep(5000);
       } else {
         throw err;
@@ -89,14 +89,14 @@ async function fetchAndSaveNews() {
       try {
         aiSummary = await generateDetailedSummary(item.title, cleanSnippet);
       } catch (geminiErr) {
-        console.error(`⚠️ SKIPPING ARTICLE due to API load: "${item.title}"`);
+        console.error(`⚠️ SKIPPING ARTICLE due to API error: "${item.title}"`);
         continue;
       }
 
       const articlePayload = {
         title: item.title,
-        summary: aiSummary, // Stores clean AI breakdown
-        content: aiSummary, // Populates content field so modal drawers get full text
+        summary: aiSummary,
+        content: aiSummary,
         tier_required: 'free',
         category: 'Macro'
       };
