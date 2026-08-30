@@ -10,7 +10,10 @@ const SUPABASE_ANON_KEY = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1Ni
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-async function generateDetailedSummary(headline, snippet) {
+// Delay helper for rate limits / 503 spikes
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function generateDetailedSummary(headline, snippet, retries = 2) {
   const prompt = `You are a Senior Wall Street Financial Analyst. 
 
 Analyze this news item:
@@ -28,17 +31,25 @@ Which specific sectors, equities, bonds, commodities, or currencies will move be
 **3. Key Takeaway for Traders**
 What action should portfolio managers or traders consider? Detail key risk metrics or strategic positioning.`;
 
-  // Updated to the exact active model requested by the API error endpoint
-  const response = await ai.models.generateContent({
-    model: 'gemini-3.6-flash',
-    contents: prompt,
-  });
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+      });
 
-  if (!response || !response.text) {
-    throw new Error('Gemini returned an empty response text.');
+      if (response && response.text) {
+        return response.text;
+      }
+    } catch (err) {
+      if (attempt <= retries) {
+        console.warn(`⚠️ API temporary issue (${err.status || err.message}). Retrying in 3 seconds... (Attempt ${attempt}/${retries})`);
+        await sleep(3000);
+      } else {
+        throw err;
+      }
+    }
   }
-
-  return response.text;
 }
 
 async function fetchAndSaveNews() {
@@ -74,8 +85,8 @@ async function fetchAndSaveNews() {
       try {
         aiSummary = await generateDetailedSummary(item.title, cleanSnippet);
       } catch (geminiErr) {
-        console.error(`❌ GEMINI FAILED FOR "${item.title}":`, geminiErr.message);
-        throw geminiErr;
+        console.error(`⚠️ SKIPPING ARTICLE due to API load: "${item.title}"`);
+        continue; // Skip this individual article and continue with the remaining items
       }
 
       const articlePayload = {
@@ -95,6 +106,9 @@ async function fetchAndSaveNews() {
       } else {
         console.log(`Successfully added multi-paragraph AI summary for: "${item.title}"`);
       }
+      
+      // Brief pause between requests to prevent hitting concurrency limits
+      await sleep(1000);
     }
   } catch (err) {
     console.error('Pipeline process failed:', err);
