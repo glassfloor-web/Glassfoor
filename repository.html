@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glassfloor - Knowledge Repository</title>
-    <!-- Supabase JS Client -->
+    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -94,7 +94,6 @@
             margin-bottom: 16px;
         }
 
-        /* Toggle Button Group */
         .mode-toggle-bar {
             display: inline-flex;
             background: #0d0e12;
@@ -161,13 +160,12 @@
     </div>
 
     <script>
-        // Supabase Client Setup
         const SUPABASE_URL = "https://wclodubfdmmqfwsznzbs.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbG9kdWJmZG1tcWZ3c3puemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MzA1MTMsImV4cCI6MjEwMzMwNjUxM30.mfF_8FWI_7IF1JlGlQTU3647CrioDteoCKjY2MCChrQ";
 
-        const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Correct CDN initialization
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Helper to extract a 1-2 sentence simplified breakdown
         function getSimplifiedSummary(text) {
             if (!text) return "No summary available.";
             const sentences = text.split('. ');
@@ -178,20 +176,21 @@
             const container = document.getElementById('articles-container');
 
             try {
-                // Fetch articles ordered by newest first
-                const { data: articles, error } = await supabase
+                const { data: articles, error } = await supabaseClient
                     .from('knowledge_repository')
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    console.error("Supabase Error:", error);
+                    throw error;
+                }
 
                 if (!articles || articles.length === 0) {
-                    container.innerHTML = `<div class="empty-state">No analysis reports available in the database yet.</div>`;
+                    container.innerHTML = `<div class="empty-state">No analysis reports found in the database.</div>`;
                     return;
                 }
 
-                // Render Articles
                 container.innerHTML = articles.map(article => {
                     const fullText = article.summary || article.content || 'No content available.';
                     const simpleText = getSimplifiedSummary(fullText);
@@ -219,7 +218,6 @@
                                 <span>${formattedDate}</span>
                             </div>
 
-                            <!-- Hidden content holders for mode switching -->
                             <template id="detailed-data-${article.id}">${fullText}</template>
                             <template id="simple-data-${article.id}">${simpleText}</template>
                         </div>
@@ -227,12 +225,11 @@
                 }).join('');
 
             } catch (err) {
-                console.error('Error fetching articles:', err);
-                container.innerHTML = `<div class="error-state">Failed to load articles. Verify Supabase SELECT policies.</div>`;
+                console.error('Error loading repository:', err);
+                container.innerHTML = `<div class="error-state">Failed to load articles. Check browser console for details or verify Supabase SELECT policies.</div>`;
             }
         }
 
-        // Mode Switcher Function (Detailed vs. Simplified)
         function toggleMode(articleId, mode) {
             const card = document.getElementById(`article-${articleId}`);
             const contentBox = document.getElementById(`content-${articleId}`);
