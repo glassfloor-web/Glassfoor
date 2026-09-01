@@ -14,14 +14,14 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Multi-topic RSS Feed Sources
 const FEED_SOURCES = [
-  'https://feeds.content.dowjones.io/public/rss/mw_topstories',     // MarketWatch Top Stories
-  'https://www.coindesk.com/arc/outboundfeeds/rss/',              // Crypto & Web3
-  'https://www.sec.gov/news/pressreleases.rss',                  // SEC Corporate Filings
-  'https://finance.yahoo.com/rss/headline?s=AAPL,MSFT,NVDA,TSLA'  // Equities & Tech
+  'https://feeds.content.dowjones.io/public/rss/mw_topstories',     // MarketWatch
+  'https://www.coindesk.com/arc/outboundfeeds/rss/',              // Crypto
+  'https://www.sec.gov/news/pressreleases.rss',                  // SEC Filings
+  'https://finance.yahoo.com/rss/headline?s=AAPL,MSFT,NVDA,TSLA'  // Tech Equities
 ];
 
 /**
- * Uses Gemini 2.5 Flash to generate a structured analysis and select a precise category tag.
+ * Generates dynamic category selection and detailed AI analysis
  */
 async function generateDetailedSummary(headline, snippet, retries = 3) {
   const prompt = `You are a Senior Wall Street Financial Analyst.
@@ -57,7 +57,6 @@ Respond EXCLUSIVELY in valid raw JSON format with no code block formatting:
       });
 
       if (response && response.text) {
-        // Parse raw JSON response reliably using regex bounds
         const jsonMatch = response.text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           return JSON.parse(jsonMatch[0]);
@@ -65,13 +64,11 @@ Respond EXCLUSIVELY in valid raw JSON format with no code block formatting:
       }
     } catch (err) {
       if (attempt < retries) {
-        console.warn(`⚠️ API attempt ${attempt} failed (${err.message}). Retrying in 5 seconds...`);
         await sleep(5000);
       } else {
-        console.error(` Failed to analyze article: "${headline}"`);
         return {
           category: "Macro & Central Banks",
-          summary: `${headline}\n\nAnalysis temporarily unavailable due to external feed processing timeout.`
+          summary: `${headline}\n\nAnalysis temporarily unavailable.`
         };
       }
     }
@@ -79,13 +76,12 @@ Respond EXCLUSIVELY in valid raw JSON format with no code block formatting:
 }
 
 /**
- * Main Execution Pipeline
+ * Main Pipeline
  */
 async function runPipeline() {
-  console.log("📡 Fetching live news across multiple market feeds...");
+  console.log("📡 Fetching live news items...");
   let articlesToProcess = [];
 
-  // Fetch top stories from each RSS source
   for (const feedUrl of FEED_SOURCES) {
     try {
       const feed = await parser.parseURL(feedUrl);
@@ -96,7 +92,7 @@ async function runPipeline() {
       }));
       articlesToProcess.push(...topItems);
     } catch (e) {
-      console.warn(`Could not parse feed URL (${feedUrl}):`, e.message);
+      console.warn(`Could not parse feed (${feedUrl}):`, e.message);
     }
   }
 
@@ -108,30 +104,30 @@ async function runPipeline() {
     console.log(`Analyzing: "${article.title}"...`);
     const aiResult = await generateDetailedSummary(article.title, article.snippet);
 
-    // Save directly to Supabase with dynamic category classification
+    // Insert directly into 'repo_items' with exact column names from your table
     const { error } = await supabase
-      .from('knowledge_repository')
+      .from('repo_items')
       .insert([
         {
-          title: article.title,
-          summary: aiResult.summary,
-          category: aiResult.category,
-          source: article.source,
+          Title: article.title,
+          Summary: article.snippet,
+          ai_analysis: aiResult.summary,
+          tags: aiResult.category,
+          published: article.source,
           created_at: new Date().toISOString()
         }
       ]);
 
     if (error) {
-      console.error(`Supabase error for "${article.title}":`, error.message);
+      console.error(`Supabase insert error:`, error.message);
     } else {
-      console.log(` Saved [${aiResult.category}]: "${article.title}"`);
+      console.log(`Saved [${aiResult.category}] to repo_items: "${article.title}"`);
     }
 
-    // Rate-limiting pause between requests
     await sleep(5000);
   }
 
-  console.log("Pipeline execution successfully completed!");
+  console.log("Pipeline execution finished!");
 }
 
 runPipeline();
